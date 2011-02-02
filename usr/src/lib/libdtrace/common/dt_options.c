@@ -41,6 +41,7 @@
 #include <alloca.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <zone.h>
 
 #include <dt_impl.h>
 #include <dt_string.h>
@@ -854,6 +855,36 @@ dt_opt_bufresize(dtrace_hdl_t *dtp, const char *arg, uintptr_t option)
 	return (0);
 }
 
+/*ARGSUSED*/
+static int
+dt_opt_zone(dtrace_hdl_t *dtp, const char *arg, uintptr_t option)
+{
+	dtrace_optval_t val = 0;
+	zoneid_t z;
+
+	if (arg == NULL)
+		return (dt_set_errno(dtp, EDT_BADOPTVAL));
+
+	/*
+	 * First attempt to treat the argument as a zone name; if that fails,
+	 * treat it as an identifier (and validate that it corresponds to a
+	 * zone).
+	 */
+	if ((z = getzoneidbyname(arg)) == -1) {
+		char n[ZONENAME_MAX];
+
+		if (dt_optval_parse(arg, &val) != 0)
+			return (dt_set_errno(dtp, EDT_BADOPTVAL));
+
+		if (getzonenamebyid(z = (zoneid_t)val, n, sizeof (n)) < 0)
+			return (dt_set_errno(dtp, EDT_BADOPTVAL));
+	}
+
+	dtp->dt_options[DTRACEOPT_ZONE] = z;
+
+	return (0);
+}
+
 int
 dt_options_load(dtrace_hdl_t *dtp)
 {
@@ -994,6 +1025,7 @@ static const dt_option_t _dtrace_rtoptions[] = {
 	{ "strsize", dt_opt_strsize, DTRACEOPT_STRSIZE },
 	{ "ustackframes", dt_opt_runtime, DTRACEOPT_USTACKFRAMES },
 	{ "temporal", dt_opt_runtime, DTRACEOPT_TEMPORAL },
+	{ "zone", dt_opt_zone, DTRACEOPT_ZONE },
 	{ NULL }
 };
 

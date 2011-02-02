@@ -615,7 +615,7 @@ libdladm:	libdevinfo libinetutil libscf librcm libexacct libkstat \
 libdll:		libast
 libdlpi:	libinetutil libdladm
 libds:		libsysevent
-libdtrace:	libproc libgen libctf libmapmalloc
+libdtrace:	libproc libgen libctf libmapmalloc libzonecfg
 libdtrace_jni:	libuutil libdtrace
 libdwarf:	../cmd/sgs/libelf
 libefi:		libuuid libsmbios
