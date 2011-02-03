@@ -22,6 +22,7 @@
 /*
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
  * Copyright 2014 Nexenta Systems, Inc. All rights reserved.
+ * Copyright (c) 2011, Joyent Inc. All rights reserved.
  */
 
 #ifndef	_ZONEADMD_H
@@ -135,7 +136,7 @@ typedef enum {
 /*
  * Virtual platform interfaces.
  */
-extern zoneid_t vplat_create(zlog_t *, zone_mnt_t);
+extern zoneid_t vplat_create(zlog_t *, zone_mnt_t, zoneid_t);
 extern int vplat_bringup(zlog_t *, zone_mnt_t, zoneid_t);
 extern int vplat_teardown(zlog_t *, boolean_t, boolean_t);
 extern int vplat_get_iptype(zlog_t *, zone_iptype_t *);

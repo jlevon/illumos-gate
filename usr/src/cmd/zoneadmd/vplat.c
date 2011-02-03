@@ -4753,8 +4753,14 @@ out:
 	return (res);
 }
 
+/*
+ * The zone_did is a persistent debug ID.  Each zone should have a unique ID
+ * in the kernel.  This is used for things like DTrace which want to monitor
+ * zones across reboots.  They can't use the zoneid since that changes on
+ * each boot.
+ */
 zoneid_t
-vplat_create(zlog_t *zlogp, zone_mnt_t mount_cmd)
+vplat_create(zlog_t *zlogp, zone_mnt_t mount_cmd, zoneid_t zone_did)
 {
 	zoneid_t rval = -1;
 	priv_set_t *privs;
@@ -4895,7 +4901,7 @@ vplat_create(zlog_t *zlogp, zone_mnt_t mount_cmd)
 	xerr = 0;
 	if ((zoneid = zone_create(kzone, rootpath, privs, rctlbuf,
 	    rctlbufsz, zfsbuf, zfsbufsz, &xerr, match, doi, zlabel,
-	    flags)) == -1) {
+	    flags, zone_did)) == -1) {
 		if (xerr == ZE_AREMOUNTS) {
 			if (zonecfg_find_mounts(rootpath, NULL, NULL) < 1) {
 				zerror(zlogp, B_FALSE,

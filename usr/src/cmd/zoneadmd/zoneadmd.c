@@ -23,6 +23,7 @@
  * Copyright (c) 2003, 2010, Oracle and/or its affiliates. All rights reserved.
  * Copyright 2014 Nexenta Systems, Inc. All rights reserved.
  * Copyright (c) 2016 by Delphix. All rights reserved.
+ * Copyright (c) 2011, Joyent Inc. All rights reserved.
  */
 
 /*
@@ -117,6 +118,7 @@ boolean_t zone_iscluster;
 boolean_t zone_islabeled;
 boolean_t shutdown_in_progress;
 static zoneid_t zone_id;
+static zoneid_t zone_did = 0;
 dladm_handle_t dld_handle = NULL;
 
 static char pre_statechg_hook[2 * MAXPATHLEN];
@@ -547,7 +549,10 @@ zone_ready(zlog_t *zlogp, zone_mnt_t mount_cmd, int zstate)
 		goto bad;
 	}
 
-	if ((zone_id = vplat_create(zlogp, mount_cmd)) == -1) {
+	if (zone_did == 0)
+		zone_did = zone_get_did(zone_name);
+
+	if ((zone_id = vplat_create(zlogp, mount_cmd, zone_did)) == -1) {
 		if ((err = zonecfg_destroy_snapshot(zone_name)) != Z_OK)
 			zerror(zlogp, B_FALSE, "destroying snapshot: %s",
 			    zonecfg_strerror(err));
@@ -1355,8 +1360,8 @@ server(void *cookie, char *args, size_t alen, door_desc_t *dp,
 		case Z_BOOT:
 		case Z_FORCEBOOT:
 			eventstream_write(Z_EVT_ZONE_BOOTING);
-			if ((rval = zone_ready(zlogp, Z_MNT_BOOT, zstate))
-			    == 0) {
+			if ((rval = zone_ready(zlogp, Z_MNT_BOOT,
+			    zstate)) == 0) {
 				rval = zone_bootup(zlogp, zargp->bootbuf,
 				    zstate);
 			}
@@ -1544,7 +1549,8 @@ server(void *cookie, char *args, size_t alen, door_desc_t *dp,
 			if ((rval = zone_halt(zlogp, B_FALSE, B_TRUE, zstate))
 			    != 0)
 				break;
-			if ((rval = zone_ready(zlogp, Z_MNT_BOOT, zstate)) == 0)
+			if ((rval = zone_ready(zlogp, Z_MNT_BOOT, zstate))
+			    == 0)
 				eventstream_write(Z_EVT_ZONE_READIED);
 			else
 				eventstream_write(Z_EVT_ZONE_HALTED);
