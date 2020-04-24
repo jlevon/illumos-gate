@@ -33,6 +33,8 @@
 
 const char __nsl_dom[]  = "SUNW_OST_NETRPC";
 
+sigset_t fillset; /* FIXME: need to fill! */
+
 void *
 thr_get_storage(pthread_key_t *keyp, size_t size, void (*destructor)(void *))
 {

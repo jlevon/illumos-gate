@@ -160,8 +160,12 @@ inet_matchaddr(const void *sa, const char *name)
 				errno = EINVAL;
 				break;
 			}
+#if 0 // FIXME jlevon
 			mask4 = mb ? ~0 << ((sizeof (struct in_addr) * NBBY)
-			    - mb) : 0;
+			    - mb) : 0UL;
+#else
+			mask4 = 0;
+#endif
 			hcaddr4 &= mask4;
 		} else {
 			/*

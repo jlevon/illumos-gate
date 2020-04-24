@@ -58,9 +58,8 @@
 #include <alloca.h>
 #include <stdlib.h>
 #include <zone.h>
+#include <door.h>
 #include <tsol/label.h>
-
-extern bool_t __svc_get_door_ucred(const SVCXPRT *, ucred_t *);
 
 /*
  * This routine is typically called on the server side if the server
@@ -201,7 +200,7 @@ __rpc_get_local_uid(SVCXPRT *trans, uid_t *uid_out)
 
 	/* LINTED - pointer alignment */
 	if (svc_type(trans) == SVC_DOOR)
-		err = __svc_get_door_ucred(trans, uc) == FALSE;
+		err = (door_ucred(&uc) == 0) == FALSE;
 	else
 		err = find_ucred_opt(trans, uc, B_TRUE);
 
@@ -222,7 +221,7 @@ __rpc_get_local_cred(SVCXPRT *xprt, svc_local_cred_t *lcred)
 
 	/* LINTED - pointer alignment */
 	if (svc_type(xprt) == SVC_DOOR)
-		err = __svc_get_door_ucred(xprt, uc) == FALSE;
+		err = (door_ucred(&uc) == 0) == FALSE;
 	else
 		err = find_ucred_opt(xprt, uc, B_TRUE);
 
@@ -254,7 +253,7 @@ svc_getcallerucred(const SVCXPRT *trans, ucred_t **uc)
 
 	/* LINTED - pointer alignment */
 	if (svc_type(trans) == SVC_DOOR)
-		err = __svc_get_door_ucred(trans, ucp) == FALSE;
+		err = (door_ucred(&ucp) == 0) == FALSE;
 	else
 		err = find_ucred_opt(trans, ucp, B_FALSE);
 
@@ -568,6 +567,7 @@ __rpc_set_mac_options(int fd, const struct netconfig *nconf, rpcprog_t prognum)
 	    strcmp(nconf->nc_protofmly, NC_INET6) != 0)
 		return;
 
+#if 0
 	if (is_multilevel(prognum)) {
 		ret = __rpc_tli_set_options(fd, SOL_SOCKET, SO_MAC_EXEMPT, 1);
 		if (ret < 0) {
@@ -579,4 +579,5 @@ __rpc_set_mac_options(int fd, const struct netconfig *nconf, rpcprog_t prognum)
 			    errorstr);
 		}
 	}
+#endif
 }

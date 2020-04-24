@@ -42,7 +42,9 @@
  */
 
 #include "mt.h"
+#if 0
 #include "../rpc/rpc_mt.h"		/* for MT declarations only */
+#endif
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>

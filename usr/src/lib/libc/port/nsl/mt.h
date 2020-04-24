@@ -51,6 +51,11 @@
 #include <signal.h>
 #include <synch.h>
 
+#include "mtlib.h"
+
+// FIXME
+extern sigset_t fillset;	/* for actually blocking all signals */
+
 #ifdef	__cplusplus
 extern "C" {
 #endif

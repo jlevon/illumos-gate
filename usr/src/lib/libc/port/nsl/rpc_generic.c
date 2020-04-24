@@ -37,7 +37,7 @@
  */
 
 #include "mt.h"
-#include "rpc_mt.h"
+//#include "rpc_mt.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <rpc/rpc.h>
@@ -80,6 +80,15 @@ struct _rpcnettype {
 	"door_netpath", _RPC_DOOR_NETPATH,
 	0, _RPC_NONE
 };
+
+/*
+ * XDR nothing
+ */
+bool_t
+xdr_void(void)
+{
+	return (TRUE);
+}
 
 /*
  * Cache the result of getrlimit(), so we don't have to do an
@@ -430,8 +439,10 @@ __rpcfd_to_nconf(int fd, int servtype)
 		if (t_getinfo(fd, &tinfo) == -1) {
 			char errorstr[100];
 
+#if 0 // FIXME jlevon
 			__tli_sys_strerror(errorstr, sizeof (errorstr),
 					t_errno, errno);
+#endif
 			(void) syslog(LOG_ERR, "__rpcfd_to_nconf : %s : %s",
 					"could not get transport information",
 					errorstr);

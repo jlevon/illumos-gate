@@ -670,10 +670,71 @@ PORTINET=			\
 	ruserpass.o
 
 PORTNSL=			\
-	can_use_af.o		\
 	common.o		\
 	getipnodeby.o		\
-	netselect.o
+	netselect.o		\
+	can_use_af.o		\
+	gethostby_door.o	\
+	getuserattr.o		\
+	getrpcent.o		\
+	gethostent.o		\
+	gethostent6.o		\
+	getprofattr.o		\
+	getexecattr.o		\
+	getipnodeby_door.o	\
+	getrpcent_r.o		\
+	getauthattr.o		\
+	inet_matchaddr.o	\
+	netdir_inet.o		\
+	parse.o			\
+	netdir_inet_sundry.o	\
+	getauuser.o		\
+	gethostent_r.o		\
+	gethostbyname_r.o	\
+	netdir.o		\
+	rpc_generic.o		\
+	ti_opts.o		\
+	xti_wrappers.o		\
+	t_accept.o		\
+	t_alloc.o		\
+	t_bind.o		\
+	t_close.o		\
+	t_connect.o		\
+	t_error.o		\
+	t_free.o		\
+	t_getinfo.o		\
+	t_getname.o		\
+	t_getstate.o		\
+	t_listen.o		\
+	t_look.o		\
+	t_open.o		\
+	t_optmgmt.o		\
+	t_rcv.o			\
+	t_rcvconnect.o		\
+	t_rcvdis.o		\
+	t_rcvrel.o		\
+	t_rcvreldata.o		\
+	t_rcvudata.o		\
+	t_rcvuderr.o		\
+	t_rcvv.o		\
+	t_rcvvudata.o		\
+	t_snd.o			\
+	t_snddis.o		\
+	t_sndrel.o		\
+	t_sndreldata.o		\
+	t_sndudata.o		\
+	t_sndv.o		\
+	t_sndvudata.o		\
+	t_strerror.o		\
+	t_sync.o		\
+	t_sysconf.o		\
+	t_unbind.o		\
+	_utility.o		\
+	_conn_util.o		\
+	_errlst.o		\
+	_data2.o		\
+	tli_wrappers.o
+
 
 PORTPRINT_W=			\
 	doprnt_w.o
