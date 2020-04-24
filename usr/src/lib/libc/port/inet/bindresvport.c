@@ -32,21 +32,15 @@
  * under license from the Regents of the University of California.
  */
 
-#pragma ident	"%Z%%M%	%I%	%E% SMI"
-
 #include <sys/types.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <strings.h>
 #include <string.h>
 #include <unistd.h>
-
-#ifdef SYSV
-#define	bzero(s, len)	(void) memset((s), 0, (len))
-#endif
-
 
 /*
  * Bind a socket to a privileged IP port

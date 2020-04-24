@@ -61,6 +61,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <strings.h>
 #include <string.h>
 #include <stdlib.h>
 #include <grp.h>
@@ -68,15 +69,6 @@
 #include <arpa/inet.h>
 
 #include <priv_utils.h>
-
-#ifdef SYSV
-#define	bcopy(s1, s2, len)	(void) memcpy(s2, s1, len)
-#define	bzero(s, len)		(void) memset(s, 0, len)
-#define	index(s, c)		strchr(s, c)
-char	*strchr();
-#else
-char	*index();
-#endif /* SYSV */
 
 extern int  usingypmap();
 
@@ -116,14 +108,10 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 	char aport[MAX_SHORTSTRLEN];
 	char c;
 	int lport = 0;
-#ifdef SYSV
 	sigset_t oldmask;
 	sigset_t newmask;
 	struct sigaction oldaction;
 	struct sigaction newaction;
-#else
-	int oldmask;
-#endif /* SYSV */
 	fd_set fdset;
 	int selret;
 	char *addr;
@@ -157,7 +145,7 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 	resp = res;
 	(void) strlcpy(hostname, res->ai_canonname, MAXHOSTNAMELEN);
 	*ahost = hostname;
-#ifdef SYSV
+
 	/* ignore SIGPIPE */
 	bzero((char *)&newaction, sizeof (newaction));
 	newaction.sa_handler = SIG_IGN;
@@ -167,9 +155,7 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 	bzero((char *)&newmask, sizeof (newmask));
 	(void) sigaddset(&newmask, SIGURG);
 	(void) sigprocmask(SIG_BLOCK, &newmask, &oldmask);
-#else
-	oldmask = _sigblock(sigmask(SIGURG));
-#endif /* SYSV */
+
 	for (;;) {
 		s = rresvport_af(&lport, res->ai_family);
 		if (s < 0) {
@@ -191,7 +177,6 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 				    "socket: All ports in use\n"));
 			else
 				perror("rcmd: socket");
-#ifdef SYSV
 			/* restore original SIGPIPE handler */
 			(void) sigaction(SIGPIPE, &oldaction,
 			    (struct sigaction *)0);
@@ -199,9 +184,6 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 			/* restore original signal mask */
 			(void) sigprocmask(SIG_SETMASK, &oldmask,
 			    (sigset_t *)0);
-#else
-			sigsetmask(oldmask);
-#endif /* SYSV */
 			freeaddrinfo(resp);
 			return (-1);
 		}
@@ -260,16 +242,12 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 		}
 		perror(*ahost);
 		freeaddrinfo(resp);
-#ifdef SYSV
 		/* restore original SIGPIPE handler */
 		(void) sigaction(SIGPIPE, &oldaction,
 		    (struct sigaction *)0);
 
 		/* restore original signal mask */
 		(void) sigprocmask(SIG_SETMASK, &oldmask, (sigset_t *)0);
-#else
-		sigsetmask(oldmask);
-#endif /* SYSV */
 		return (-1);
 	}
 	lport = 0;
@@ -389,15 +367,11 @@ int rcmd_af(char **ahost, unsigned short rport, const char *locuser,
 		}
 		goto bad2;
 	}
-#ifdef SYSV
 	/* restore original SIGPIPE handler */
 	(void) sigaction(SIGPIPE, &oldaction, (struct sigaction *)0);
 
 	/* restore original signal mask */
 	(void) sigprocmask(SIG_SETMASK, &oldmask, (sigset_t *)0);
-#else
-	sigsetmask(oldmask);
-#endif /* SYSV */
 	freeaddrinfo(resp);
 	return (s);
 bad2:
@@ -405,15 +379,11 @@ bad2:
 		(void) close(*fd2p);
 bad:
 	(void) close(s);
-#ifdef SYSV
 	/* restore original SIGPIPE handler */
 	(void) sigaction(SIGPIPE, &oldaction, (struct sigaction *)0);
 
 	/* restore original signal mask */
 	(void) sigprocmask(SIG_SETMASK, &oldmask, (sigset_t *)0);
-#else
-	sigsetmask(oldmask);
-#endif /* SYSV */
 	freeaddrinfo(resp);
 	return (-1);
 }

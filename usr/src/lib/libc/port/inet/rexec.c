@@ -37,8 +37,6 @@
  * contributors.
  */
 
-#pragma ident	"%Z%%M%	%I%	%E% SMI"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -48,13 +46,10 @@
 #include <netdb.h>
 #include <errno.h>
 #include <unistd.h>
+#include <strings.h>
 #include <string.h>
 #include <stdlib.h>
 #include <libintl.h>
-
-#ifdef SYSV
-#define	bcopy(a, b, c)	(void) memcpy((b), (a), (c))
-#endif
 
 #define	MAX_SHORTSTRLEN 6
 

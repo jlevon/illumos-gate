@@ -52,10 +52,6 @@
 #include <libintl.h>
 #include <limits.h>
 
-#ifdef SYSV
-#define	index	strchr
-#endif /* SYSV */
-
 static void rnetrc(const char *host, char **aname, char **apass);
 static int token();
 

@@ -645,11 +645,34 @@ PORTINET=			\
 	sockatmark.o		\
 	socket.o		\
 	socketpair.o		\
-	sockweaks.o
+	sockweaks.o		\
+	inet6_rthdr.o		\
+	getprotoent_r.o		\
+	getservent_r.o		\
+	getservbyname_r.o	\
+	sourcefilter.o		\
+	ether_addr.o		\
+	netmasks.o		\
+	getnameinfo.o		\
+	getaddrinfo.o		\
+	getprotoent.o		\
+	getnetent_r.o		\
+	getnetent.o		\
+	getifaddrs.o		\
+	bootparams_getbyname.o	\
+	link_addr.o		\
+	rexec.o			\
+	getservent.o		\
+	bindresvport.o		\
+	inet6_opt.o		\
+	interface_id.o		\
+	rcmd.o			\
+	ruserpass.o
 
 PORTNSL=			\
 	can_use_af.o		\
 	common.o		\
+	getipnodeby.o		\
 	netselect.o
 
 PORTPRINT_W=			\
