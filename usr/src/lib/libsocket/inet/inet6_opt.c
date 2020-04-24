@@ -50,7 +50,7 @@
 int
 inet6_opt_init(void *extbuf, socklen_t extlen)
 {
-	if (extbuf && ((extlen < 0) || (extlen % 8))) {
+	if (extbuf && ((extlen % 8))) {
 		return (-1);
 	}
 
@@ -77,7 +77,7 @@ inet6_opt_append(void *extbuf, socklen_t extlen, int offset, uint8_t type,
 
 	if (align > len ||
 	    (align != 1 && align != 2 && align != 4 && align != 8) ||
-	    len < 0 || len > 255 || type < 2) {
+	    len > 255 || type < 2) {
 		return (-1);
 	}
 

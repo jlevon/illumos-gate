@@ -23,6 +23,7 @@
 # Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
 # Copyright (c) 2013, OmniTI Computer Consulting, Inc. All rights reserved.
 # Copyright 2018 Nexenta Systems, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 #
@@ -49,7 +50,7 @@ SYMBOL_VERSION ILLUMOS_0.2 {	# reentrant ethers(3SOCKET)
 
 SYMBOL_VERSION ILLUMOS_0.1 {    # illumos additions
     global:
-	accept4;
+	accept4			{ TYPE = FUNCTION; FILTER = libc.so.1 };
 } SUNW_1.7;
 
 SYMBOL_VERSION SUNW_1.7 {
@@ -81,7 +82,7 @@ SYMBOL_VERSION SUNW_1.5 {
 	inet6_rth_reverse;
 	inet6_rth_segments;
 	inet6_rth_space;
-	sockatmark;
+	sockatmark		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	__xnet_getaddrinfo;
 } SUNW_1.4;
 
@@ -118,15 +119,15 @@ SYMBOL_VERSION SUNW_1.2 {
 
 SYMBOL_VERSION SUNW_1.1 {
     global:
-	__xnet_bind;
-	__xnet_connect;
-	__xnet_getsockopt;
-	__xnet_listen;
-	__xnet_recvmsg;
-	__xnet_sendmsg;
-	__xnet_sendto;
-	__xnet_socket;
-	__xnet_socketpair;
+	__xnet_bind		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_connect		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_getsockopt	{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_listen		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_recvmsg		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_sendmsg		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_sendto		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_socket		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	__xnet_socketpair	{ TYPE = FUNCTION; FILTER = libc.so.1 };
 } SUNW_0.7;
 
 SYMBOL_VERSION SUNW_0.7 {
@@ -163,7 +164,7 @@ SYMBOL_VERSION SUNW_0.7 {
 	setnetent;
 	setprotoent;
 	setservent;
-	socketpair;
+	socketpair		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 
 	# For ABI reasons, the following symbols are in SISCD_2.3 on 32-bit
 	# sparc, which is inherited by SUNW_0.7. On all other platforms,
@@ -174,30 +175,30 @@ $if _sparc && _ELF32
 SYMBOL_VERSION SISCD_2.3 {
     global:
 $endif
-	accept;
-	bind;
-	connect;
-	getpeername;
+	accept			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	bind			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	connect			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	getpeername		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	getprotobyname;
 	getprotobynumber;
 	getprotoent;
 	getservbyname;
 	getservbyport;
-	getsockname;
-	getsockopt;
+	getsockname		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	getsockopt		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	inet_lnaof		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	inet_makeaddr		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	inet_network		{ TYPE = FUNCTION; FILTER = libc.so.1 };
-	listen;
-	recv;
-	recvfrom;
-	recvmsg;
-	send;
-	sendmsg;
-	sendto;
-	setsockopt;
-	shutdown;
-	socket;
+	listen			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	recv			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	recvfrom		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	recvmsg			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	send			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	sendmsg			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	sendto			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	setsockopt		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	shutdown		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	socket			{ TYPE = FUNCTION; FILTER = libc.so.1 };
 };
 
 # There really should be only one SUNWprivate version.
@@ -205,7 +206,7 @@ $endif
 
 SYMBOL_VERSION SUNWprivate_1.3 {
     global:
-	_accept4;
+	_accept4		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	_link_aton;
 	_link_ntoa;
 	_nss_initf_ethers;
@@ -229,29 +230,29 @@ SYMBOL_VERSION SUNWprivate_1.2 {
 
 SYMBOL_VERSION SUNWprivate_1.1 {
     global:
-	_accept;
-	_bind;
+	_accept			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_bind			{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	bindresvport;
 	bootparams_getbyname;
-	_connect;
-	_getpeername;
-	_getsockname;
-	_getsockopt;
-	_listen;
-	_recv;
-	_recvfrom;
-	_recvmsg;
+	_connect		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_getpeername		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_getsockname		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_getsockopt		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_listen			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_recv			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_recvfrom		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_recvmsg		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	rresvport_addr;
 	_ruserpass;
-	_send;
-	_sendmsg;
-	_sendto;
-	_setsockopt;
-	_shutdown;
-	_socket;
-	_socket_bsd;
-	_socketpair;
-	_socketpair_bsd;
+	_send			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_sendmsg		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_sendto			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_setsockopt		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_shutdown		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_socket			{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_socket_bsd		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_socketpair		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	_socketpair_bsd		{ TYPE = FUNCTION; FILTER = libc.so.1 };
     local:
 	*;
 };

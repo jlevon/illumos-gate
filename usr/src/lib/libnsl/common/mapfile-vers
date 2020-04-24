@@ -22,6 +22,7 @@
 #
 # Copyright (c) 2006, 2010, Oracle and/or its affiliates. All rights reserved.
 # Copyright 2018 Nexenta Systems, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 #
@@ -238,7 +239,7 @@ SYMBOL_VERSION SUNW_0.7 {	# SunOS 5.3 (Solaris 2.3)
 	inet_ntoa_r		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	key_secretkey_is_set;
 	maxbno;
-	nc_sperror;
+	nc_sperror		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	netdir_perror;
 	netdir_sperror;
 	nextkey;
@@ -347,13 +348,13 @@ $endif
 	clnt_tli_create;
 	clnt_tp_create;
 	clnt_vc_create;
-	endnetconfig;
-	endnetpath;
-	freenetconfigent;
-	getnetconfig;
-	getnetconfigent;
+	endnetconfig		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	endnetpath		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	freenetconfigent	{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	getnetconfig		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	getnetconfigent		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	getnetname;
-	getnetpath;
+	getnetpath		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	getpublickey;
 	getsecretkey;
 	host2netname;
@@ -361,7 +362,7 @@ $endif
 	key_encryptsession;
 	key_gendes;
 	key_setsecret;
-	nc_perror;
+	nc_perror		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	_nderror;
 	netdir_free;
 	netdir_getbyaddr;
@@ -379,8 +380,8 @@ $endif
 	rpc_call;
 	rpc_createerr;
 	rpc_reg;
-	setnetconfig;
-	setnetpath;
+	setnetconfig		{ TYPE = FUNCTION; FILTER = libc.so.1 };
+	setnetpath		{ TYPE = FUNCTION; FILTER = libc.so.1 };
 	svc_create;
 	svc_dg_create;
 	svcerr_auth;

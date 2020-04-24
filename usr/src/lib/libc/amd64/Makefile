@@ -24,7 +24,7 @@
 # Copyright (c) 2013, OmniTI Computer Consulting, Inc. All rights reserved.
 # Copyright 2013 Garrett D'Amore <garrett@damore.org>
 # Copyright 2018 Nexenta Systems, Inc.
-# Copyright 2019 Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 # Copyright 2019 OmniOS Community Edition (OmniOSce) Association.
 #
 
@@ -607,7 +607,17 @@ PORTINET=			\
 	inet_network.o		\
 	inet_ntoa.o		\
 	inet_ntop.o		\
-	inet_pton.o
+	inet_pton.o		\
+	_soutil.o		\
+	sockatmark.o		\
+	socket.o		\
+	socketpair.o		\
+	sockweaks.o
+
+PORTNSL=			\
+	can_use_af.o		\
+	common.o		\
+	netselect.o
 
 PORTPRINT_W=			\
 	doprnt_w.o
@@ -980,6 +990,7 @@ MOSTOBJS=			\
 	$(PORTI18N_COND)	\
 	$(PORTINET)		\
 	$(PORTLOCALE)		\
+	$(PORTNSL)		\
 	$(PORTPRINT)		\
 	$(PORTPRINT_W)		\
 	$(PORTREGEX)		\

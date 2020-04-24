@@ -2733,6 +2733,27 @@ sig_mutex_trylock(mutex_t *mp)
 	return (error);
 }
 
+void
+sig_rw_rdlock(rwlock_t *rwlp)
+{
+	_sigoff();
+	(void) rw_rdlock(rwlp);
+}
+
+void
+sig_rw_wrlock(rwlock_t *rwlp)
+{
+	_sigoff();
+	(void) rw_wrlock(rwlp);
+}
+
+void
+sig_rw_unlock(rwlock_t *rwlp)
+{
+	(void) rw_unlock(rwlp);
+	_sigon();
+}
+
 /*
  * sig_cond_wait() is a cancellation point.
  */

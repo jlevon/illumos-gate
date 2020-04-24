@@ -21,33 +21,30 @@
 
 #
 # Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
-# Copyright (c) 2018, Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 LIBRARY	=	libsocket.a
 VERS =		.1
 
-INETOBJS =	bindresvport.o bootparams_getbyname.o ether_addr.o \
+OBJECTS =	bindresvport.o bootparams_getbyname.o ether_addr.o \
 		getaddrinfo.o getnameinfo.o getnetent.o getnetent_r.o \
 		getprotoent.o getprotoent_r.o getservbyname_r.o getservent.o \
 		getservent_r.o inet6_opt.o inet6_rthdr.o interface_id.o \
 		link_addr.o netmasks.o rcmd.o rexec.o ruserpass.o \
 		sourcefilter.o getifaddrs.o
-SOCKOBJS =	_soutil.o sockatmark.o socket.o socketpair.o weaks.o
-OBJECTS	=	$(INETOBJS) $(SOCKOBJS)
 
 include ../../Makefile.lib
 
 # install this library in the root filesystem
 include ../../Makefile.rootfs
 
-LIBS =		$(DYNLIB) $(LINTLIB)
+LIBS =		$(DYNLIB)
 
-SRCS =		$(INETOBJS:%.o=../inet/%.c) $(SOCKOBJS:%.o=../socket/%.c)
+SRCS =		$(INETOBJS:%.o=../inet/%.c)
 LDLIBS +=	-lnsl -lc
 
 SRCDIR =	../common
-$(LINTLIB):=	SRCS = $(SRCDIR)/$(LINTSRC)
 
 # Make string literals read-only to save memory.
 CFLAGS +=	$(XSTRCONST)
@@ -58,24 +55,15 @@ CPPFLAGS +=	-DSYSV -D_REENTRANT -I../../common/inc
 
 CERRWARN +=	-_gcc=-Wno-type-limits
 CERRWARN +=	$(CNOWARN_UNINIT)
-CERRWARN +=	-_gcc=-Wno-unused-variable
-CERRWARN +=	-_gcc=-Wno-parentheses
 
-# not linted
-SMATCH=off
+# needs work
+SMOFF += all_func_returns,no_if_block,sizeof
 
 .KEEP_STATE:
 
 all:
 
-lint:	lintcheck
-
-# libsocket build rules
 pics/%.o: ../inet/%.c
-	$(COMPILE.c) -o $@ $<
-	$(POST_PROCESS_O)
-
-pics/%.o: ../socket/%.c
 	$(COMPILE.c) -o $@ $<
 	$(POST_PROCESS_O)
 

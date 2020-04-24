@@ -37,6 +37,10 @@
  * contributors.
  */
 
+/*
+ * Copyright 2020 Joyent, Inc.
+ */
+
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -655,7 +659,7 @@ _validuser(FILE *hostf, char *rhost, const char *luser,
 {
 	char *user;
 	char ahost[BUFSIZ];
-	char *uchost = (char *)NULL;
+	char *uchost = NULL;
 	int hostmatch, usermatch;
 	char *p;
 
@@ -666,7 +670,7 @@ _validuser(FILE *hostf, char *rhost, const char *luser,
 #endif /* NIS */
 
 	while (fgets(ahost, (int)sizeof (ahost), hostf)) {
-		uchost = (char *)NULL;
+		uchost = NULL;
 		hostmatch = usermatch = 0;
 		p = ahost;
 		/*
@@ -689,13 +693,13 @@ _validuser(FILE *hostf, char *rhost, const char *luser,
 			 *	the host name field.
 			 */
 			if (isupper(*p)) {
-				if (uchost == (char *)NULL)
+				if (uchost == NULL)
 					uchost = strdup(ahost);
 				*p = tolower(*p);
 			}
 			p++;
 		}
-		if (*p != '\0' && uchost != (char *)NULL)
+		if (*p != '\0' && uchost != NULL)
 			uchost[p - ahost] = '\0';
 		if (*p == ' ' || *p == '\t') {
 			*p++ = '\0';
@@ -712,14 +716,14 @@ _validuser(FILE *hostf, char *rhost, const char *luser,
 			hostmatch = 1;
 #ifdef NIS
 		else if (ahost[0] == '+' && ahost[1] == '@')
-			if (uchost != (char *)NULL)
+			if (uchost != NULL)
 				hostmatch = innetgr(uchost + 2, rhost,
 				    NULL, domain);
 			else
 				hostmatch = innetgr(ahost + 2, rhost,
 				    NULL, domain);
 		else if (ahost[0] == '-' && ahost[1] == '@') {
-			if (uchost != (char *)NULL) {
+			if (uchost != NULL) {
 				if (innetgr(uchost + 2, rhost, NULL, domain))
 					break;
 			} else {
@@ -756,13 +760,16 @@ _validuser(FILE *hostf, char *rhost, const char *luser,
 		}
 		else
 			usermatch = (strcmp(ruser, luser) == 0);
-		if (uchost != (char *)NULL)
+		if (uchost != NULL) {
 			free(uchost);
+			uchost = NULL;
+		}
+
 		if (hostmatch && usermatch)
 			return (0);
 	}
 
-	if (uchost != (char *)NULL)
+	if (uchost != NULL)
 		free(uchost);
 	return (-1);
 }

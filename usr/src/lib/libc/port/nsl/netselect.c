@@ -32,10 +32,8 @@
  * under license from the Regents of the University of California.
  */
 
-#pragma ident	"%Z%%M%	%I%	%E% SMI"
-
 #include "mt.h"
-#include "../rpc/rpc_mt.h"		/* for MT declarations only */
+#include <sys/socket.h>
 #include <rpc/types.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +46,8 @@
 #include "netcspace.h"
 
 #define	FAILURE  (unsigned)(-1)
+
+extern int	__can_use_af(sa_family_t);
 
 /*
  *	Local routines used by the library procedures

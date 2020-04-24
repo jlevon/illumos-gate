@@ -22,7 +22,7 @@
 #
 # Copyright (c) 1997, 2010, Oracle and/or its affiliates. All rights reserved.
 # Copyright 2018 Nexenta Systems, Inc. All rights reserved.
-# Copyright (c) 2018, Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 #
 
 LIBRARY= libnsl.a
@@ -46,8 +46,6 @@ gethostbyname_r.o gethostent.o gethostent_r.o gethostent6.o gethostby_door.o \
 getipnodeby_door.o getipnodeby.o getrpcent.o  getrpcent_r.o inet_matchaddr.o \
 netdir_inet.o netdir_inet_sundry.o \
 parse.o getauthattr.o getprofattr.o getexecattr.o getuserattr.o getauuser.o
-
-NETSELECT= netselect.o
 
 NSL=  \
 _conn_util.o    _data2.o        _errlst.o \
@@ -125,10 +123,6 @@ pics/%.o: ../nss/%.c
 	$(COMPILE.c)  -o $@ $<
 	$(POST_PROCESS_O)
 
-pics/%.o: ../netselect/%.c
-	$(COMPILE.c)  -o $@ $<
-	$(POST_PROCESS_O)
-
 pics/%.o: ../nsl/%.c
 	$(COMPILE.c)  -o $@ $<
 	$(POST_PROCESS_O)
@@ -164,7 +158,7 @@ include ../../Makefile.lib
 # install this library in the root filesystem
 include ../../Makefile.rootfs
 
-LIBS =		$(DYNLIB) $(LINTLIB)
+LIBS =		$(DYNLIB)
 
 SRCDIR=		../common
 
@@ -179,7 +173,8 @@ SRCDIR=		../common
 # linker print out the list of GOT hogs..
 
 GOTHOGS =	dial.o print_obj.o clnt_perror.o nsl_stdio_prv.o netdir.o \
-		algs.o netselect.o
+		algs.o
+# FIXME?? netselect.o was here
 BIGPICS =	$(GOTHOGS:%=pics/%)
 $(BIGPICS) :=	sparc_C_PICFLAGS = $(C_BIGPICFLAGS)
 $(BIGPICS) :=	i386_C_PICFLAGS = $(C_BIGPICFLAGS)
@@ -208,34 +203,24 @@ CERRWARN +=	-_gcc=-Wno-clobbered
 SMATCH=off
 
 LIBMP =		-lmp
-lint :=		LIBMP =
 LDLIBS +=	$(LIBMP) -lmd -lc
 DYNFLAGS +=	$(ZNODELETE)
-
-$(LINTLIB):=	SRCS=$(SRCDIR)/$(LINTSRC)
-LINTFLAGS +=	-m -DPORTMAP
-LINTFLAGS64 +=	-m -DPORTMAP
 
 .KEEP_STATE:
 
 all: $(LIBS)
 
-# Don't lint WRAPPERS as they are explicitly unclean
 SRCS=	$(DES:%.o=../des/%.c)			\
 	$(DIAL:%.o=../dial/%.c)			\
 	$(IPSEC:%.o=../ipsec/%.c)		\
 	$(NETDIR:%.o=../netdir/%.c)		\
 	$(NSS:%.o=../nss/%.c)			\
-	$(NETSELECT:%.o=../netselect/%.c)	\
 	$(NSL:%.o=../nsl/%.c)			\
 	$(RPC:%.o=../rpc/%.c)			\
 	$(SAF:%.o=../saf/%.c)			\
 	$(YP:%.o=../yp/%.c)			\
 	$(NIS_GEN:%.o=../nis/gen/%.c)		\
 	$(COMMON:%.o=../common/%.c)
-
-lint:
-	@$(LINT.c) $(SRCS) $(LDLIBS)
 
 # include library targets
 include ../../Makefile.targ

@@ -193,6 +193,10 @@ pics/%.o %.o: $(LIBCBASE)/../port/locale/%.c
 	$(COMPILE.c) -o $@ $<
 	$(POST_PROCESS_O)
 
+pics/%.o %.o: $(LIBCBASE)/../port/nsl/%.c
+	$(COMPILE.c) -o $@ $<
+	$(POST_PROCESS_O)
+
 # print rules
 pics/%.o: $(LIBCBASE)/../port/print/%.c
 	$(COMPILE.c) -o $@ $<
