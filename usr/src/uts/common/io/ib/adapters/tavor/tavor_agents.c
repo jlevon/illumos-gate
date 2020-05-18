@@ -63,7 +63,7 @@ int
 tavor_agent_handlers_init(tavor_state_t *state)
 {
 	int		status;
-	char		*errormsg, *rsrc_name;
+	char		*rsrc_name;
 
 	TAVOR_TNF_ENTER(tavor_agent_handlers_init);
 
@@ -85,7 +85,6 @@ tavor_agent_handlers_init(tavor_state_t *state)
 	status = tavor_agent_list_init(state);
 	if (status != DDI_SUCCESS) {
 		/* Set "status" and "errormsg" and goto failure */
-		TAVOR_TNF_FAIL(DDI_FAILURE, "failed agent list init");
 		goto agentsinit_fail;
 	}
 

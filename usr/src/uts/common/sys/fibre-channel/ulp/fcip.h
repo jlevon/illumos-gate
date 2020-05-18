@@ -573,33 +573,6 @@ struct fcip_sendup_elem {
 };
 
 
-/*
- * Having TNF probe points can be lethal during reconfiguration boot. Enable
- * TNF using a compile time define.
- */
-
-#ifdef __lint
-#define	FCIP_TNF_ENABLED
-#else
-#undef	FCIP_TNF_ENABLED
-#endif
-
-#ifdef	FCIP_TNF_ENABLED
-
-extern int tnf_mod_load(void);
-extern int tnf_mod_unload(struct modlinkage *e);
-
-#define	FCIP_TNF_LOAD()			(void) tnf_mod_load()
-#define	FCIP_TNF_UNLOAD(x)		(void) tnf_mod_unload(x)
-#define	FCIP_TNF_PROBE_0(x)		TNF_PROBE_0 x
-#define	FCIP_TNF_PROBE_1(x)		TNF_PROBE_1 x
-#define	FCIP_TNF_PROBE_2(x)		TNF_PROBE_2 x
-#define	FCIP_TNF_PROBE_3(x)		TNF_PROBE_3 x
-#define	FCIP_TNF_PROBE_4(x)		TNF_PROBE_4 x
-#define	FCIP_TNF_PROBE_5(x)		TNF_PROBE_5 x
-
-#else
-
 #define	FCIP_TNF_LOAD()
 #define	FCIP_TNF_UNLOAD(x)
 #define	FCIP_TNF_PROBE_0(x)
@@ -608,8 +581,6 @@ extern int tnf_mod_unload(struct modlinkage *e);
 #define	FCIP_TNF_PROBE_3(x)
 #define	FCIP_TNF_PROBE_4(x)
 #define	FCIP_TNF_PROBE_5(x)
-
-#endif	/* FCIP_TNF_ENABLED */
 
 /*
  * Macros to help with complex TNF output

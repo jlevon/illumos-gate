@@ -22,7 +22,7 @@
 # Copyright (c) 2005, 2010, Oracle and/or its affiliates. All rights reserved.
 # Copyright (c) 2013 Andrew Stormont.  All rights reserved.
 # Copyright (c) 2014 by Delphix. All rights reserved.
-# Copyright 2019 Joyent, Inc.
+# Copyright 2020 Joyent, Inc.
 # Copyright 2016 Garrett D'Amore <garrett@damore.org>
 # Copyright 2018 Nexenta Systems, Inc.
 # Copyright 2019 RackTop Systems
@@ -371,7 +371,6 @@ DRV_KMODS	+= tcp
 DRV_KMODS	+= tcp6
 DRV_KMODS	+= timerfd
 DRV_KMODS	+= tl
-DRV_KMODS	+= tnf
 DRV_KMODS	+= tpm
 DRV_KMODS	+= trill
 DRV_KMODS	+= udp

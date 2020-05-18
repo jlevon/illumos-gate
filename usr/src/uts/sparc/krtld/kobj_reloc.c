@@ -38,48 +38,10 @@
 #include <sys/elf.h>
 #include <sys/kobj.h>
 #include <sys/kobj_impl.h>
-#include <sys/tnf.h>
-#include <sys/tnf_probe.h>
 #include <sys/sdt.h>
 
 #include "krtld/reloc.h"
 
-
-/*
- * Probe discovery support
- */
-#define	PROBE_MARKER_SYMBOL	"__tnf_probe_version_1"
-#define	TAG_MARKER_SYMBOL	"__tnf_tag_version_1"
-
-extern int tnf_splice_probes(int, tnf_probe_control_t *, tnf_tag_data_t *);
-
-/*
- * The kernel run-time linker calls this to try to resolve a reference
- * it can't otherwise resolve.  We see if it's marking a probe control
- * block or a probe tag block; if so, we do the resolution and return 0.
- * If not, we return 1 to show that we can't resolve it, either.
- */
-static int
-tnf_reloc_resolve(char *symname, Addr *value_p,
-    Elf64_Sxword *addend_p,
-    long offset,
-    tnf_probe_control_t **probelist,
-    tnf_tag_data_t **taglist)
-{
-	if (strcmp(symname, PROBE_MARKER_SYMBOL) == 0) {
-		*addend_p = 0;
-		((tnf_probe_control_t *)offset)->next = *probelist;
-		*probelist = (tnf_probe_control_t *)offset;
-		return (0);
-	}
-	if (strcmp(symname, TAG_MARKER_SYMBOL) == 0) {
-		*addend_p = 0;
-		*value_p = (Addr)*taglist;
-		*taglist = (tnf_tag_data_t *)offset;
-		return (0);
-	}
-	return (1);
-}
 
 #define	SDT_RESTORE_MASK	0xc1f80000
 #define	SDT_RESTORE		0x81e80000
@@ -156,8 +118,6 @@ do_relocate(struct module *mp, char *reltbl, int nreloc, int relocsize,
 	Sym *symref;
 	int symnum;
 	int err = 0;
-	tnf_probe_control_t *probelist = NULL;
-	tnf_tag_data_t *taglist = NULL;
 
 	reladdr = (uintptr_t)reltbl;
 	rend = reladdr + nreloc * relocsize;
@@ -266,10 +226,7 @@ do_relocate(struct module *mp, char *reltbl, int nreloc, int relocsize,
 				    (uintptr_t)mp->text)) == 0)
 					continue;
 
-				if (symref->st_shndx == SHN_UNDEF &&
-				    tnf_reloc_resolve(mp->strings +
-				    symref->st_name, &symref->st_value,
-				    &addend, off, &probelist, &taglist) != 0) {
+				if (symref->st_shndx == SHN_UNDEF) {
 					if (ELF_ST_BIND(symref->st_info)
 					    != STB_WEAK) {
 						_kobj_printf(ops,
@@ -322,9 +279,6 @@ do_relocate(struct module *mp, char *reltbl, int nreloc, int relocsize,
 
 	if (err)
 		return (-1);
-
-	if (tnf_splice_probes(mp->flags & KOBJ_PRIM, probelist, taglist))
-		mp->flags |= KOBJ_TNF_PROBE;
 
 	return (0);
 }

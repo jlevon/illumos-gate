@@ -962,20 +962,6 @@ stubs_base:
 #endif
 
 /*
- * Stubs for kernel probes (tnf module).  Not unloadable.
- */
-#ifndef TNF_MODULE
-	MODULE(tnf,drv);
-	NO_UNLOAD_STUB(tnf, tnf_ref32_1,	nomod_zero);
-	NO_UNLOAD_STUB(tnf, tnf_string_1,	nomod_zero);
-	NO_UNLOAD_STUB(tnf, tnf_opaque_array_1,	nomod_zero);
-	NO_UNLOAD_STUB(tnf, tnf_opaque32_array_1, nomod_zero);
-	NO_UNLOAD_STUB(tnf, tnf_struct_tag_1,	nomod_zero);
-	NO_UNLOAD_STUB(tnf, tnf_allocate,	nomod_zero);
-	END_MODULE(tnf);
-#endif
-
-/*
  * Clustering: stubs for bootstrapping.
  */
 #ifndef CL_BOOTSTRAP

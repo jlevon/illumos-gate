@@ -23,11 +23,7 @@
 # Copyright 2008 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#	This makefile drives the production of the hermon InfiniBand module
-#
-#	sparc architecture dependent
-#
-# uts/sparc/hermon/Makefile
+# Copyright 2020 Joyent, Inc.
 #
 
 #
@@ -40,7 +36,6 @@ UTSBASE = ../..
 #
 MODULE		= hermon
 OBJECTS		= $(HERMON_OBJS:%=$(OBJS_DIR)/%)
-LINTS		= $(HERMON_OBJS:%.o=$(LINTS_DIR)/%.ln)
 ROOTMODULE	= $(ROOT_DRV_DIR)/$(MODULE)
 CONF_SRCDIR	= $(UTSBASE)/common/io/ib/adapters/hermon
 LDFLAGS		+= -dy -Ndrv/ib -Nmisc/ibtl -Nmisc/ibmf
@@ -54,22 +49,12 @@ include $(UTSBASE)/sparc/Makefile.sparc
 #	Define targets
 #
 ALL_TARGET	= $(BINARY) $(SRC_CONFFILE)
-LINT_TARGET	= $(MODULE).lint
 INSTALL_TARGET	= $(BINARY) $(ROOTMODULE) $(ROOT_CONFFILE)
 
 #
 #	Overrides
 #
 
-#
-# Build with no debug TNF probes enabled (by default)
-#
-#DEBUG_DEFS_DBG32 += -DTNF_DEBUG
-#DEBUG_DEFS_DBG64 += -DTNF_DEBUG
-
-# 
-# lint pass one enforcement 
-# 
 CFLAGS += $(CCVERBOSE)
 
 CERRWARN	+= -_gcc=-Wno-switch
@@ -90,12 +75,6 @@ all:		$(ALL_DEPS)
 clean:		$(CLEAN_DEPS)
 
 clobber:	$(CLOBBER_DEPS)
-
-lint:		$(LINT_DEPS)
-
-modlintlib:	$(MODLINTLIB_DEPS)
-
-clean.lint:	$(CLEAN_LINT_DEPS)
 
 install:	$(INSTALL_DEPS)
 

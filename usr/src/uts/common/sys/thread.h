@@ -25,7 +25,7 @@
  */
 
 /*
- * Copyright 2019 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 #ifndef	_SYS_THREAD_H
@@ -158,7 +158,7 @@ typedef struct _kthread {
 	struct _kthread	*t_intr; /* interrupted (pinned) thread */
 	uint64_t	t_intr_start;	/* timestamp when time slice began */
 	kt_did_t	t_did;	/* thread id for kernel debuggers */
-	caddr_t t_tnf_tpdp;	/* Trace facility data pointer */
+	caddr_t t_unused;		/* unused, was tnf */
 	struct _kcpc_ctx *t_cpc_ctx;	/* performance counter context */
 	struct _kcpc_set *t_cpc_set;	/* set this thread has bound */
 

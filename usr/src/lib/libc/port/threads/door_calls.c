@@ -413,8 +413,7 @@ door_return(char *data_ptr, size_t data_size,
 	 * some "slop" from the stack pointer before trapping into the
 	 * kernel.  We now do this here, so that ssize can be adjusted
 	 * correctly.  Eventually, this should be removed, since it is
-	 * unnecessary.  (note that TNF on x86 currently relies upon this
-	 * idiocy)
+	 * unnecessary.
 	 */
 #if defined(__sparc)
 	reserve = SA(MINFRAME);

@@ -290,10 +290,7 @@ typedef struct	proc {
 	kcondvar_t		p_unref_cv;
 	char			p_unref_thread;	/* unref thread created */
 
-	/*
-	 * Kernel probes
-	 */
-	uchar_t			p_tnf_flags;
+	uchar_t			p_unused3; /* previously tnf */
 
 	/*
 	 * Solaris Audit
