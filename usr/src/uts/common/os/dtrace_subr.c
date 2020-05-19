@@ -22,7 +22,7 @@
 /*
  * Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
  * Use is subject to license terms.
- * Copyright 2016 Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 #include <sys/dtrace.h>
@@ -49,7 +49,7 @@ void (*dtrace_closef)(void);
 void (*dtrace_debugger_init)(void);
 void (*dtrace_debugger_fini)(void);
 
-dtrace_vtime_state_t dtrace_vtime_active = 0;
+volatile uint64_t dtrace_vtime_users = 0;
 dtrace_cacheid_t dtrace_predcache_id = DTRACE_CACHEIDNONE + 1;
 
 /*
@@ -178,52 +178,6 @@ dtrace_gethrestime(void)
 	}
 
 	return (now);
-}
-
-void
-dtrace_vtime_enable(void)
-{
-	dtrace_vtime_state_t state, nstate;
-
-	nstate = DTRACE_VTIME_INACTIVE;
-	do {
-		state = dtrace_vtime_active;
-
-		switch (state) {
-		case DTRACE_VTIME_INACTIVE:
-			nstate = DTRACE_VTIME_ACTIVE;
-			break;
-
-		case DTRACE_VTIME_ACTIVE:
-			panic("DTrace virtual time already enabled");
-			/*NOTREACHED*/
-		}
-
-	} while	(atomic_cas_32((uint32_t *)&dtrace_vtime_active,
-	    state, nstate) != state);
-}
-
-void
-dtrace_vtime_disable(void)
-{
-	dtrace_vtime_state_t state, nstate;
-
-	nstate = DTRACE_VTIME_INACTIVE;
-	do {
-		state = dtrace_vtime_active;
-
-		switch (state) {
-		case DTRACE_VTIME_ACTIVE:
-			nstate = DTRACE_VTIME_INACTIVE;
-			break;
-
-		case DTRACE_VTIME_INACTIVE:
-			panic("DTrace virtual time already disabled");
-			/*NOTREACHED*/
-		}
-
-	} while	(atomic_cas_32((uint32_t *)&dtrace_vtime_active,
-	    state, nstate) != state);
 }
 
 void

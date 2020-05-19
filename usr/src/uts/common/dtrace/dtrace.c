@@ -182,7 +182,6 @@ static int		dtrace_toxranges;	/* number of toxic ranges */
 static int		dtrace_toxranges_max;	/* size of toxic range array */
 static dtrace_anon_t	dtrace_anon;		/* anonymous enabling */
 static kmem_cache_t	*dtrace_state_cache;	/* cache for dynamic state */
-static uint64_t		dtrace_vtime_references; /* number of vtimestamp refs */
 static kthread_t	*dtrace_panicked;	/* panicking thread */
 static dtrace_ecb_t	*dtrace_ecb_create_cache; /* cached created ECB */
 static dtrace_genid_t	dtrace_probegen;	/* current probe generation */
@@ -3258,7 +3257,7 @@ dtrace_dif_variable(dtrace_mstate_t *mstate, dtrace_state_t *state, uint64_t v,
 		return (mstate->dtms_timestamp);
 
 	case DIF_VAR_VTIMESTAMP:
-		ASSERT(dtrace_vtime_references != 0);
+		ASSERT(dtrace_vtime_users != 0);
 		return (curthread->t_dtrace_vtime);
 
 	case DIF_VAR_WALLTIMESTAMP:
@@ -6971,7 +6970,7 @@ dtrace_probe(dtrace_id_t id, uintptr_t arg0, uintptr_t arg1,
 
 	now = mstate.dtms_timestamp = dtrace_gethrtime();
 	mstate.dtms_present |= DTRACE_MSTATE_TIMESTAMP;
-	vtime = dtrace_vtime_references != 0;
+	vtime = dtrace_vtime_users != 0;
 
 	if (vtime && curthread->t_dtrace_start)
 		curthread->t_dtrace_vtime += now - curthread->t_dtrace_start;
@@ -9944,8 +9943,7 @@ dtrace_difo_hold(dtrace_difo_t *dp)
 		if (v->dtdv_id != DIF_VAR_VTIMESTAMP)
 			continue;
 
-		if (dtrace_vtime_references++ == 0)
-			dtrace_vtime_enable();
+		dtrace_vtime_users++;
 	}
 }
 
@@ -10341,9 +10339,8 @@ dtrace_difo_release(dtrace_difo_t *dp, dtrace_vstate_t *vstate)
 		if (v->dtdv_id != DIF_VAR_VTIMESTAMP)
 			continue;
 
-		ASSERT(dtrace_vtime_references > 0);
-		if (--dtrace_vtime_references == 0)
-			dtrace_vtime_disable();
+		ASSERT(dtrace_vtime_users > 0);
+		dtrace_vtime_users--;
 	}
 
 	if (--dp->dtdo_refcnt == 0)
@@ -17207,7 +17204,7 @@ dtrace_detach(dev_info_t *dip, ddi_detach_cmd_t cmd)
 
 	ddi_soft_state_fini(&dtrace_softstate);
 
-	ASSERT(dtrace_vtime_references == 0);
+	ASSERT(dtrace_vtime_users == 0);
 	ASSERT(dtrace_opens == 0);
 	ASSERT(dtrace_retained == NULL);
 

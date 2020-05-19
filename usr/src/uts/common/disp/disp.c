@@ -919,7 +919,7 @@ swtch()
 			cp->cpu_last_swtch = t->t_disp_time = ddi_get_lbolt();
 			TRACE_0(TR_FAC_DISP, TR_RESUME_START, "resume_start");
 
-			if (dtrace_vtime_active)
+			if (dtrace_vtime_users > 0)
 				dtrace_vtime_switch(next);
 
 			resume(next);
@@ -985,7 +985,7 @@ swtch_from_zombie()
 
 	restore_mstate(next);
 
-	if (dtrace_vtime_active)
+	if (dtrace_vtime_users > 0)
 		dtrace_vtime_switch(next);
 
 	resume_from_zombie(next);
@@ -1108,7 +1108,7 @@ swtch_to(kthread_t *next)
 	/* restore next thread to previously running microstate */
 	restore_mstate(next);
 
-	if (dtrace_vtime_active)
+	if (dtrace_vtime_users > 0)
 		dtrace_vtime_switch(next);
 
 	resume(next);
