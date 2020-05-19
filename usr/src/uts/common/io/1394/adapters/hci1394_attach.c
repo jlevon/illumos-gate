@@ -86,28 +86,16 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 	int status;
 
 
-	TNF_PROBE_0_DEBUG(hci1394_attach_enter, HCI1394_TNF_HAL_STACK, "");
-
 	switch (cmd) {
 	case DDI_ATTACH:
 		instance = ddi_get_instance(dip);
 		status = ddi_soft_state_zalloc(hci1394_statep, instance);
 		if (status != DDI_SUCCESS) {
-			TNF_PROBE_1(hci1394_attach_ssz_fail,
-			    HCI1394_TNF_HAL_ERROR, "", tnf_string, errmsg,
-			    "ddi_soft_state_zalloc() failed");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		soft_state = ddi_get_soft_state(hci1394_statep, instance);
 		if (soft_state == NULL) {
 			ddi_soft_state_free(hci1394_statep, instance);
-			TNF_PROBE_1(hci1394_attach_gss_fail,
-			    HCI1394_TNF_HAL_ERROR, "", tnf_string, errmsg,
-			    "ddi_get_soft_state() failed");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		hci1394_statebit_set(&attach_state, STATE_ZALLOC);
@@ -118,10 +106,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = hci1394_isr_init(soft_state);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_isr_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		hci1394_statebit_set(&attach_state, STATE_ISR_INIT);
@@ -130,10 +114,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		    instance, DDI_NT_NEXUS, 0);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_cmn_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		hci1394_statebit_set(&attach_state, STATE_MINOR_NODE);
@@ -141,10 +121,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = hci1394_hardware_init(soft_state);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_hwi_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		hci1394_statebit_set(&attach_state, STATE_HW_INIT);
@@ -156,10 +132,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = hci1394_resmap_get(soft_state);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_rmg_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -169,10 +141,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		if (status != DDI_SUCCESS) {
 			hci1394_resmap_free(soft_state);
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_ha_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		/* free the reserved addresses map */
@@ -182,10 +150,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = hci1394_isr_handler_init(soft_state);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_ih_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 		hci1394_statebit_set(&attach_state, STATE_ISR_HANDLER);
@@ -203,14 +167,8 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = hci1394_ohci_startup(soft_state->ohci);
 		if (status != DDI_SUCCESS) {
 			hci1394_cleanup(soft_state, attach_state);
-			TNF_PROBE_0(hci1394_attach_str_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
-		TNF_PROBE_0_DEBUG(hci1394_attach_exit, HCI1394_TNF_HAL_STACK,
-		    "");
 
 		return (DDI_SUCCESS);
 
@@ -218,21 +176,11 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		instance = ddi_get_instance(dip);
 		soft_state = ddi_get_soft_state(hci1394_statep, instance);
 		if (soft_state == NULL) {
-			TNF_PROBE_1(hci1394_attach_resgss_fail,
-			    HCI1394_TNF_HAL_ERROR, "", tnf_string, errmsg,
-			    "ddi_get_soft_state() failed");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 
 		status = hci1394_hardware_resume(soft_state);
 		if (status != DDI_SUCCESS) {
-			TNF_PROBE_1(hci1394_attach_res_hwr_fail,
-			    HCI1394_TNF_HAL_ERROR, "", tnf_string, errmsg,
-			    "hardware failed to resume");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -245,11 +193,6 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		/* turn on the link, enable interrupts, reset the bus */
 		status = hci1394_ohci_startup(soft_state->ohci);
 		if (status != DDI_SUCCESS) {
-			TNF_PROBE_1(hci1394_attach_res_str_fail,
-			    HCI1394_TNF_HAL_ERROR, "", tnf_string, errmsg,
-			    "hci1394_ohci_startup() failed");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -257,24 +200,14 @@ hci1394_attach(dev_info_t *dip, ddi_attach_cmd_t cmd)
 		status = h1394_attach(&soft_state->halinfo, DDI_RESUME,
 		    &soft_state->drvinfo.di_sl_private);
 		if (status != DDI_SUCCESS) {
-			TNF_PROBE_0(hci1394_attach_res_ha_fail,
-			    HCI1394_TNF_HAL_ERROR, "");
-			TNF_PROBE_0_DEBUG(hci1394_attach_exit,
-			    HCI1394_TNF_HAL_STACK, "");
 			return (DDI_FAILURE);
 		}
 
-		TNF_PROBE_0_DEBUG(hci1394_attach_exit, HCI1394_TNF_HAL_STACK,
-		    "");
 		return (DDI_SUCCESS);
 
 	default:
-		TNF_PROBE_0(h1394_attach_default_fail, HCI1394_TNF_HAL_ERROR,
-		    "");
 		break;
 	}
-
-	TNF_PROBE_0_DEBUG(hci1394_attach_exit, HCI1394_TNF_HAL_STACK, "");
 
 	return (DDI_FAILURE);
 }
@@ -292,8 +225,6 @@ hci1394_soft_state_phase1_init(hci1394_state_t *soft_state, dev_info_t *dip,
     int instance)
 {
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_soft_state_phase1_init_enter,
-	    HCI1394_TNF_HAL_STACK, "");
 
 	soft_state->drvinfo.di_dip = dip;
 	soft_state->drvinfo.di_instance = instance;
@@ -323,9 +254,6 @@ hci1394_soft_state_phase1_init(hci1394_state_t *soft_state, dev_info_t *dip,
 	soft_state->halinfo.addr_map_num_entries = HCI1394_ADDR_MAP_SIZE;
 	soft_state->halinfo.addr_map = hci1394_addr_map;
 	hci1394_buf_attr_get(&soft_state->halinfo.dma_attr);
-
-	TNF_PROBE_0_DEBUG(hci1394_soft_state_phase1_init_exit,
-	    HCI1394_TNF_HAL_STACK, "");
 }
 
 
@@ -338,8 +266,6 @@ static void
 hci1394_soft_state_phase2_init(hci1394_state_t *soft_state)
 {
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_soft_state_phase2_init_enter,
-	    HCI1394_TNF_HAL_STACK, "");
 
 	/*
 	 * Setup our initial driver state.  This requires the HW iblock
@@ -388,9 +314,6 @@ hci1394_soft_state_phase2_init(hci1394_state_t *soft_state)
 	 * called hardware_init().  Therefore, this must be in phase2_init().
 	 */
 	soft_state->halinfo.hal_overhead = hci1394_async_cmd_overhead();
-
-	TNF_PROBE_0_DEBUG(hci1394_soft_state_phase2_init_exit,
-	    HCI1394_TNF_HAL_STACK, "");
 }
 
 
@@ -406,16 +329,10 @@ hci1394_hardware_init(hci1394_state_t *soft_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_hardware_init_enter, HCI1394_TNF_HAL_STACK,
-	    "");
 
 	/* Initialize PCI config registers */
 	status = hci1394_pci_init(soft_state);
 	if (status != DDI_SUCCESS) {
-		TNF_PROBE_0(hci1394_hardware_init_pci_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_init_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -424,10 +341,6 @@ hci1394_hardware_init(hci1394_state_t *soft_state)
 	    &soft_state->ohci);
 	if (status != DDI_SUCCESS) {
 		hci1394_pci_fini(soft_state);
-		TNF_PROBE_0(hci1394_hardware_init_ohci_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_init_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -442,10 +355,6 @@ hci1394_hardware_init(hci1394_state_t *soft_state)
 		hci1394_csr_fini(&soft_state->csr);
 		hci1394_ohci_fini(&soft_state->ohci);
 		hci1394_pci_fini(soft_state);
-		TNF_PROBE_0(hci1394_hardware_init_asyn_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_init_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -462,15 +371,8 @@ hci1394_hardware_init(hci1394_state_t *soft_state)
 		hci1394_csr_fini(&soft_state->csr);
 		hci1394_ohci_fini(&soft_state->ohci);
 		hci1394_pci_fini(soft_state);
-		TNF_PROBE_0(hci1394_hardware_init_vend_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_init_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
-
-	TNF_PROBE_0_DEBUG(hci1394_hardware_init_exit,
-	    HCI1394_TNF_HAL_STACK, "");
 
 	return (DDI_SUCCESS);
 }
@@ -489,8 +391,6 @@ hci1394_hardware_resume(hci1394_state_t *soft_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_hardware_resume_enter, HCI1394_TNF_HAL_STACK,
-	    "");
 
 	/* re-enable global byte swap (if we using it) */
 	hci1394_pci_resume(soft_state);
@@ -498,10 +398,6 @@ hci1394_hardware_resume(hci1394_state_t *soft_state)
 	/* Re-init the OpenHCI HW */
 	status = hci1394_ohci_resume(soft_state->ohci);
 	if (status != DDI_SUCCESS) {
-		TNF_PROBE_0(hci1394_hardware_resume_ohci_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_resume_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -511,25 +407,14 @@ hci1394_hardware_resume(hci1394_state_t *soft_state)
 	/* Re-setup the Async Q's */
 	status = hci1394_async_resume(soft_state->async);
 	if (status != DDI_SUCCESS) {
-		TNF_PROBE_0(hci1394_hardware_resume_asyn_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_resume_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
 
 	/* Re-setup any Vendor Specific Registers */
 	status = hci1394_vendor_resume(soft_state->vendor);
 	if (status != DDI_SUCCESS) {
-		TNF_PROBE_0(hci1394_hardware_resume_vend_fail,
-		    HCI1394_TNF_HAL_ERROR, "");
-		TNF_PROBE_0_DEBUG(hci1394_hardware_resume_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_FAILURE);
 	}
-
-	TNF_PROBE_0_DEBUG(hci1394_hardware_resume_exit,
-	    HCI1394_TNF_HAL_STACK, "");
 
 	return (DDI_SUCCESS);
 }
@@ -549,16 +434,11 @@ hci1394_pci_init(hci1394_state_t *soft_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_pci_init_enter, HCI1394_TNF_HAL_STACK, "");
 
 	/* Setup PCI configuration space */
 	status = pci_config_setup(soft_state->drvinfo.di_dip,
 	    &soft_state->pci_config);
 	if (status != DDI_SUCCESS) {
-		TNF_PROBE_0(hci1394_pci_init_cfg_fail, HCI1394_TNF_HAL_ERROR,
-		    "");
-		TNF_PROBE_0_DEBUG(hci1394_pci_init_exit, HCI1394_TNF_HAL_STACK,
-		    "");
 		return (DDI_FAILURE);
 	}
 
@@ -597,8 +477,6 @@ hci1394_pci_init(hci1394_state_t *soft_state)
 
 	/* If PCI_Global_Swap bit is not set, it is unsupported */
 	if ((global_swap & OHCI_PCI_GLOBAL_SWAP) == 0) {
-		TNF_PROBE_0_DEBUG(hci1394_pci_gbs_npresent,
-		    HCI1394_TNF_HAL_INFO, "global swap not present");
 		soft_state->drvinfo.di_reg_attr.devacc_attr_version =
 		    DDI_DEVICE_ATTR_V0;
 		soft_state->drvinfo.di_reg_attr.devacc_attr_endian_flags =
@@ -617,8 +495,6 @@ hci1394_pci_init(hci1394_state_t *soft_state)
 	 * for almost all of the adapters.
 	 */
 	} else {
-		TNF_PROBE_0_DEBUG(hci1394_pci_gbs_present,
-		    HCI1394_TNF_HAL_INFO, "global swap present");
 		soft_state->drvinfo.di_reg_attr.devacc_attr_version =
 		    DDI_DEVICE_ATTR_V0;
 		soft_state->drvinfo.di_reg_attr.devacc_attr_endian_flags =
@@ -644,8 +520,6 @@ hci1394_pci_init(hci1394_state_t *soft_state)
 	soft_state->vendor_info.revision_id =
 	    (uint_t)pci_config_get8(soft_state->pci_config, PCI_CONF_REVID);
 
-	TNF_PROBE_0_DEBUG(hci1394_pci_init_exit, HCI1394_TNF_HAL_STACK, "");
-
 	return (DDI_SUCCESS);
 }
 
@@ -664,7 +538,6 @@ hci1394_pci_resume(hci1394_state_t *soft_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_pci_resume_enter, HCI1394_TNF_HAL_STACK, "");
 
 #ifdef _LITTLE_ENDIAN
 	/* Start of little endian specific code */
@@ -683,7 +556,6 @@ hci1394_pci_resume(hci1394_state_t *soft_state)
 	}
 	/* End of big endian specific code */
 #endif
-	TNF_PROBE_0_DEBUG(hci1394_pci_resume_exit, HCI1394_TNF_HAL_STACK, "");
 }
 
 
@@ -709,7 +581,6 @@ hci1394_resmap_get(hci1394_state_t *soft_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_resmap_get_enter, HCI1394_TNF_HAL_STACK, "");
 
 	/*
 	 * See if the "reserved-addresses" property is defined.  The format
@@ -729,8 +600,6 @@ hci1394_resmap_get(hci1394_state_t *soft_state)
 		/* the property is not defined,  0 reserved addresses */
 		soft_state->halinfo.resv_map_num_entries = 0;
 		soft_state->halinfo.resv_map = NULL;
-		TNF_PROBE_0_DEBUG(hci1394_resmap_get_exit,
-		    HCI1394_TNF_HAL_STACK, "");
 		return (DDI_SUCCESS);
 	} else if ((reslen < 3) || ((reslen % 3) != 0)) {
 		/*
@@ -775,8 +644,6 @@ hci1394_resmap_get(hci1394_state_t *soft_state)
 	soft_state->halinfo.resv_map_num_entries = resv_num;
 	soft_state->halinfo.resv_map = resv_map;
 
-	TNF_PROBE_0_DEBUG(hci1394_resmap_get_exit, HCI1394_TNF_HAL_STACK, "");
-
 	return (DDI_SUCCESS);
 }
 
@@ -792,7 +659,6 @@ static void
 hci1394_resmap_free(hci1394_state_t *soft_state)
 {
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_resmap_free_enter, HCI1394_TNF_HAL_STACK, "");
 
 	/*
 	 * if we have one or more reserved map entries, free up the space that
@@ -804,8 +670,6 @@ hci1394_resmap_free(hci1394_state_t *soft_state)
 		    (sizeof (h1394_addr_map_t) *
 		    soft_state->halinfo.resv_map_num_entries));
 	}
-
-	TNF_PROBE_0_DEBUG(hci1394_resmap_free_exit, HCI1394_TNF_HAL_STACK, "");
 }
 
 
@@ -855,8 +719,6 @@ hci1394_cleanup(hci1394_state_t *soft_state, uint64_t attach_state)
 
 
 	ASSERT(soft_state != NULL);
-	TNF_PROBE_0_DEBUG(hci1394_cleanup_enter, HCI1394_TNF_HAL_STACK, "");
-
 
 	status = hci1394_statebit_tst(attach_state, STATE_STARTUP);
 	if (status == B_TRUE) {
@@ -910,6 +772,4 @@ hci1394_cleanup(hci1394_state_t *soft_state, uint64_t attach_state)
 		ddi_soft_state_free(hci1394_statep,
 		    soft_state->drvinfo.di_instance);
 	}
-
-	TNF_PROBE_0_DEBUG(hci1394_cleanup_exit, HCI1394_TNF_HAL_STACK, "");
 }

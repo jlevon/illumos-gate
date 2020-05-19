@@ -72,16 +72,10 @@ s1394_alloc_cmd(s1394_hal_t *hal, uint_t flags, cmd1394_cmd_t **cmdp)
 	uint_t		 cmd_size;
 	int		 alloc_sleep;
 
-	TNF_PROBE_0_DEBUG(s1394_alloc_cmd_enter, S1394_TNF_SL_STACK, "");
-
 	alloc_sleep = (flags & T1394_ALLOC_CMD_NOSLEEP) ? KM_NOSLEEP : KM_SLEEP;
 
 	if ((alloc_sleep == KM_SLEEP) &&
 	    (servicing_interrupt())) {
-		TNF_PROBE_1(s1394_alloc_cmd_error, S1394_TNF_SL_ATREQ_ERROR,
-		    "", tnf_string, msg, "Tried to sleep in intr context");
-		TNF_PROBE_0_DEBUG(s1394_alloc_cmd_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		ASSERT(alloc_sleep != KM_SLEEP);	/* fail */
 		return (DDI_FAILURE);
 	}
@@ -90,17 +84,11 @@ s1394_alloc_cmd(s1394_hal_t *hal, uint_t flags, cmd1394_cmd_t **cmdp)
 	if ((flags &
 	    (T1394_ALLOC_CMD_FCP_COMMAND | T1394_ALLOC_CMD_FCP_RESPONSE)) ==
 	    (T1394_ALLOC_CMD_FCP_COMMAND | T1394_ALLOC_CMD_FCP_RESPONSE)) {
-		TNF_PROBE_1(s1394_alloc_cmd_error, S1394_TNF_SL_ATREQ_ERROR,
-		    "", tnf_string, msg, "Both FCP cmd and resp flags");
-		TNF_PROBE_0_DEBUG(s1394_alloc_cmd_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
 	*cmdp = kmem_cache_alloc(hal->hal_kmem_cachep, alloc_sleep);
 	if (*cmdp == NULL) {
-		TNF_PROBE_0_DEBUG(s1394_alloc_cmd_exit,
-		    S1394_TNF_SL_STACK, "");
 		return (DDI_FAILURE);
 	}
 	cmd_size = sizeof (cmd1394_cmd_t) +
@@ -124,13 +112,9 @@ s1394_alloc_cmd(s1394_hal_t *hal, uint_t flags, cmd1394_cmd_t **cmdp)
 	hal_overhead = (uchar_t *)s_priv + sizeof (s1394_cmd_priv_t);
 	s_priv->hal_cmd_private.hal_overhead = (void *)hal_overhead;
 
-	TNF_PROBE_1_DEBUG(s1394_alloc_cmd, S1394_TNF_SL_STACK, "",
-	    tnf_opaque, cmd, *cmdp);
-
 	/* kstats - number of cmd allocs */
 	hal->hal_kstats->cmd_alloc++;
 
-	TNF_PROBE_0_DEBUG(s1394_alloc_cmd_exit, S1394_TNF_SL_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -144,21 +128,14 @@ s1394_free_cmd(s1394_hal_t *hal, cmd1394_cmd_t **cmdp)
 {
 	s1394_cmd_priv_t *s_priv;
 
-	TNF_PROBE_0_DEBUG(s1394_free_cmd_enter, S1394_TNF_SL_STACK, "");
-
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(*cmdp);
 
 	/* Check that command isn't in use */
 	if (s_priv->cmd_in_use == B_TRUE) {
-		TNF_PROBE_1(s1394_free_cmd_error, S1394_TNF_SL_ERROR, "",
-		    tnf_string, msg,  "Attempted to free an in-use command");
-		TNF_PROBE_0_DEBUG(s1394_free_cmd_exit, S1394_TNF_SL_STACK, "");
 		ASSERT(s_priv->cmd_in_use == B_FALSE);
 		return (DDI_FAILURE);
 	}
-	TNF_PROBE_1_DEBUG(s1394_free_cmd, S1394_TNF_SL_STACK, "",
-	    tnf_opaque, cmd, *cmdp);
 
 	/* kstats - number of cmd allocs */
 	kmem_cache_free(hal->hal_kmem_cachep, *cmdp);
@@ -169,7 +146,6 @@ s1394_free_cmd(s1394_hal_t *hal, cmd1394_cmd_t **cmdp)
 	/* kstats - number of cmd frees */
 	hal->hal_kstats->cmd_free++;
 
-	TNF_PROBE_0_DEBUG(s1394_free_cmd_exit, S1394_TNF_SL_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -190,9 +166,6 @@ s1394_xfer_asynch_command(s1394_hal_t *hal, cmd1394_cmd_t *cmd, int *err)
 	int		  result_from_hal;
 	int		  ret;
 
-	TNF_PROBE_0_DEBUG(s1394_xfer_asynch_command_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
-
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
 
 	mutex_enter(&hal->topology_tree_mutex);
@@ -201,8 +174,6 @@ s1394_xfer_asynch_command(s1394_hal_t *hal, cmd1394_cmd_t *cmd, int *err)
 	    (hal->disable_requests_bit == 1)) {
 		*err = s1394_HAL_asynch_error(hal, cmd, state);
 		mutex_exit(&hal->topology_tree_mutex);
-		TNF_PROBE_0_DEBUG(s1394_xfer_asynch_command_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 	mutex_exit(&hal->topology_tree_mutex);
@@ -268,17 +239,8 @@ s1394_xfer_asynch_command(s1394_hal_t *hal, cmd1394_cmd_t *cmd, int *err)
 
 	default:
 		*err = CMD1394_EUNKNOWN_ERROR;
-
-		TNF_PROBE_1(s1394_xfer_asynch_command_error,
-		    S1394_TNF_SL_ATREQ_ERROR, "", tnf_string, msg,
-		    "Invalid command type specified");
-		TNF_PROBE_0_DEBUG(s1394_xfer_asynch_command_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
-
-	TNF_PROBE_0_DEBUG(s1394_xfer_asynch_command_return_from_HAL,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	if (ret == DDI_FAILURE) {
 		switch (result_from_hal) {
@@ -324,18 +286,12 @@ s1394_xfer_asynch_command(s1394_hal_t *hal, cmd1394_cmd_t *cmd, int *err)
 			break;
 		}
 
-		TNF_PROBE_2_DEBUG(s1394_xfer_asynch_command_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "",
-		    tnf_int, result_from_hal, result_from_hal,
-		    tnf_int, err, *err);
 		return (DDI_FAILURE);
 	}
 
 	/* No errors, return success */
 	*err = CMD1394_NOSTATUS;
 
-	TNF_PROBE_0_DEBUG(s1394_xfer_asynch_command_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -361,9 +317,6 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 	uint_t		  max_rec;
 	uint_t		  max_blk;
 
-	TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
-
 	ASSERT(MUTEX_HELD(&hal->topology_tree_mutex));
 
 	switch (cmd->cmd_type) {
@@ -377,19 +330,12 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 
 	default:
 		*err = CMD1394_EINVALID_COMMAND;
-		TNF_PROBE_1(s1394_setup_asynch_command_error,
-		    S1394_TNF_SL_ATREQ_ERROR, "", tnf_string, msg,
-		    "Invalid command type specified");
-		TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
 	/* Check for potential address roll-over */
 	if (s1394_address_rollover(cmd) != B_FALSE) {
 		*err = CMD1394_EADDRESS_ERROR;
-		TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -413,8 +359,6 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 
 		if (cmd->bus_generation != hal->generation_count) {
 			*err = CMD1394_ESTALE_GENERATION;
-			TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -431,8 +375,6 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 		    target->on_node == NULL) {
 			rw_exit(&hal->target_list_rwlock);
 			*err = CMD1394_EDEVICE_REMOVED;
-			TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -464,8 +406,6 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 	if (cmd->cmd_options & CMD1394_OVERRIDE_SPEED) {
 		if (cmd->cmd_speed > IEEE1394_S400) {
 			*err = CMD1394_EINVALID_COMMAND;
-			TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 
 		} else {
@@ -484,16 +424,12 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 
 		if (cmd->cmd_u.b.data_block == NULL) {
 			*err = CMD1394_ENULL_MBLK;
-			TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		}
 
 		/* Also need to check for MBLK_TOO_SMALL */
 		if (s1394_mblk_too_small(cmd) != B_FALSE) {
 			*err = CMD1394_EMBLK_TOO_SMALL;
-			TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		}
 
@@ -563,8 +499,6 @@ s1394_setup_asynch_command(s1394_hal_t *hal, s1394_target_t *target,
 	/* Put command on the HAL's outstanding request Q */
 	s1394_insert_q_asynch_cmd(hal, cmd);
 
-	TNF_PROBE_0_DEBUG(s1394_setup_asynch_command_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -579,9 +513,6 @@ s1394_insert_q_asynch_cmd(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 	s1394_cmd_priv_t *s_priv;
 	s1394_cmd_priv_t *c_priv;
 	cmd1394_cmd_t	 *temp_cmd;
-
-	TNF_PROBE_0_DEBUG(s1394_insert_q_asynch_cmd_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	mutex_enter(&hal->outstanding_q_mutex);
 
@@ -610,9 +541,6 @@ s1394_insert_q_asynch_cmd(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 	}
 
 	mutex_exit(&hal->outstanding_q_mutex);
-
-	TNF_PROBE_0_DEBUG(s1394_insert_q_asynch_cmd_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 }
 
 /*
@@ -627,9 +555,6 @@ s1394_remove_q_asynch_cmd(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 	s1394_cmd_priv_t *c_priv;
 	cmd1394_cmd_t	 *prev_cmd;
 	cmd1394_cmd_t	 *next_cmd;
-
-	TNF_PROBE_0_DEBUG(s1394_remove_q_asynch_cmd_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	mutex_enter(&hal->outstanding_q_mutex);
 
@@ -663,9 +588,6 @@ s1394_remove_q_asynch_cmd(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 	}
 
 	mutex_exit(&hal->outstanding_q_mutex);
-
-	TNF_PROBE_0_DEBUG(s1394_remove_q_asynch_cmd_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 }
 
 /*
@@ -685,9 +607,6 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 	int		 ret;
 	int		 cmd_result;
 	int		 err;
-
-	TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(req);
@@ -738,8 +657,6 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 			}
 			s1394_remove_q_asynch_cmd(hal, req);
 			s1394_pending_q_insert(hal, req, S1394_PENDING_Q_REAR);
-			TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return;
 
 		/* ack_busy_X */
@@ -797,12 +714,6 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 			/* Disable the HAL */
 			s1394_hal_shutdown(hal, B_TRUE);
 
-			TNF_PROBE_2(s1394_atreq_cmd_complete_error,
-			    S1394_TNF_SL_ATREQ_ERROR, "", tnf_string, msg,
-			    "Unrecognized cmd status code",
-			    tnf_int, status, status);
-			TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return;
 		}
 
@@ -821,20 +732,14 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 			cv_signal(&s_priv->blocking_cv);
 			mutex_exit(&s_priv->blocking_mutex);
 
-			TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return;
 		}
 
 		/* Call the target's completion_callback() */
 		if (req->completion_callback != NULL) {
-			TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_do_callback,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			req->completion_callback(req);
 		}
 
-		TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return;
 	}
 
@@ -884,18 +789,12 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 			ret = s1394_xfer_asynch_command(hal, req, &err);
 
 			if (ret == DDI_SUCCESS) {
-				TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return;
-
 			} else if (err == CMD1394_ESTALE_GENERATION) {
 				/* Remove cmd from outstanding request Q */
 				s1394_remove_q_asynch_cmd(hal, req);
 				s1394_pending_q_insert(hal, req,
 				    S1394_PENDING_Q_REAR);
-
-				TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return;
 			}
 		}
@@ -916,27 +815,14 @@ s1394_atreq_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *req, int status)
 		s_priv->blocking_flag = B_TRUE;
 		cv_signal(&s_priv->blocking_cv);
 		mutex_exit(&s_priv->blocking_mutex);
-
-		TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return;
 	}
 
 	/* Set status and call completion_callback() */
 	if (req->completion_callback != NULL) {
-
-		TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_do_callback,
-		    S1394_TNF_SL_ATREQ_STACK, "");
-
 		req->completion_callback(req);
-
-		TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return;
 	}
-
-	TNF_PROBE_0_DEBUG(s1394_atreq_cmd_complete_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 }
 
 /*
@@ -955,9 +841,6 @@ s1394_atresp_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *resp, int status)
 	dev_info_t	 *dip;
 	boolean_t	 valid_addr_blk;
 	int		 target_status;
-
-	TNF_PROBE_0_DEBUG(s1394_atresp_cmd_complete_enter,
-	    S1394_TNF_SL_ATRESP_STACK, "");
 
 	target_status = CMD1394_CMDSUCCESS;
 
@@ -1026,13 +909,6 @@ s1394_atresp_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *resp, int status)
 
 			/* Disable the HAL */
 			s1394_hal_shutdown(hal, B_TRUE);
-
-			TNF_PROBE_2(s1394_atresp_cmd_complete_error,
-			    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-			    "Unrecognized cmd status code",
-			    tnf_int, status, status);
-			TNF_PROBE_0_DEBUG(s1394_atresp_cmd_complete_exit,
-			    S1394_TNF_SL_ATRESP_STACK, "");
 			return;
 		}
 	}
@@ -1054,9 +930,6 @@ s1394_atresp_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *resp, int status)
 		case S1394_CMD_WRITE:
 		case S1394_CMD_LOCK:
 			if (resp->completion_callback != NULL) {
-				TNF_PROBE_0_DEBUG(
-				    s1394_atresp_cmd_complete_do_callback,
-				    S1394_TNF_SL_ATRESP_STACK, "");
 				resp->completion_callback(resp);
 			}
 			break;
@@ -1070,24 +943,12 @@ s1394_atresp_cmd_complete(s1394_hal_t *hal, cmd1394_cmd_t *resp, int status)
 
 			/* Disable the HAL */
 			s1394_hal_shutdown(hal, B_TRUE);
-
-			TNF_PROBE_1(s1394_atresp_cmd_complete_error,
-			    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-			    "Unrecognized transfer type");
-			TNF_PROBE_0_DEBUG(s1394_atresp_cmd_complete_exit,
-			    S1394_TNF_SL_ATRESP_STACK, "");
 			return;
 		}
 	}
 
-	TNF_PROBE_0_DEBUG(s1394_atresp_cmd_complete_call_hal_cmplt,
-	    S1394_TNF_SL_ATRESP_STACK, "");
-
 	/* Free the command - Pass it back to the HAL */
 	HAL_CALL(hal).response_complete(hal->halinfo.hal_private, resp, h_priv);
-
-	TNF_PROBE_1_DEBUG(s1394_atresp_cmd_complete_exit,
-	    S1394_TNF_SL_ATRESP_STACK, "", tnf_int, status, target_status);
 }
 
 /*
@@ -1111,9 +972,6 @@ s1394_send_response(s1394_hal_t *hal, cmd1394_cmd_t *resp)
 	int		 ret;
 	int		 result;
 
-	TNF_PROBE_0_DEBUG(s1394_send_response_enter, S1394_TNF_SL_ATRESP_STACK,
-	    "");
-
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(resp);
 
@@ -1128,20 +986,12 @@ s1394_send_response(s1394_hal_t *hal, cmd1394_cmd_t *resp)
 	    ((resp->cmd_result == CMD1394_ASYNCH_WR_QUAD) ||
 	    (resp->cmd_result == CMD1394_ASYNCH_WR_BLOCK)))) {
 
-		TNF_PROBE_0_DEBUG(s1394_send_response_call_hal_cmplt,
-		    S1394_TNF_SL_ATRESP_STACK, "");
-
 		/* Free the command - Pass it back to the HAL */
 		HAL_CALL(hal).response_complete(hal->halinfo.hal_private,
 		    resp, h_priv);
 
-		TNF_PROBE_0_DEBUG(s1394_send_response_exit,
-		    S1394_TNF_SL_ATRESP_STACK, "");
 		return (DDI_SUCCESS);
 	}
-
-	TNF_PROBE_0_DEBUG(s1394_send_response_call_hal_resp,
-	    S1394_TNF_SL_ATRESP_STACK, "");
 
 	/* kstats - number of failure responses sent */
 	if (resp->cmd_result != IEEE1394_RESP_COMPLETE) {
@@ -1208,43 +1058,17 @@ s1394_send_response(s1394_hal_t *hal, cmd1394_cmd_t *resp)
 		/* Disable the HAL */
 		s1394_hal_shutdown(hal, B_TRUE);
 
-		TNF_PROBE_1(s1394_send_response_error,
-		    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-		    "Unrecognized transfer type");
-		TNF_PROBE_0_DEBUG(s1394_send_response_exit,
-		    S1394_TNF_SL_ATRESP_STACK, "");
 		return (DDI_FAILURE);
 	}
 
 	/* Unable to send a response */
 	if (ret != DDI_SUCCESS) {
-		if (result == H1394_STATUS_INVALID_BUSGEN) {
-			TNF_PROBE_1(s1394_send_response_error,
-			    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-			    "Invalid generation in response");
-		} else if (result == H1394_STATUS_NOMORE_SPACE) {
-			TNF_PROBE_1(s1394_send_response_error,
-			    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-			    "No more space on AT response queue");
-		} else {
-			TNF_PROBE_1(s1394_send_response_error,
-			    S1394_TNF_SL_ATRESP_ERROR, "", tnf_string, msg,
-			    "Unknown problem in s1394_send_response");
-		}
-		TNF_PROBE_0_DEBUG(s1394_send_response_call_hal_cmplt,
-		    S1394_TNF_SL_ATRESP_STACK, "");
-
 		/* Free the command - Pass it back to the HAL */
 		HAL_CALL(hal).response_complete(hal->halinfo.hal_private,
 		    resp, h_priv);
-
-		TNF_PROBE_0_DEBUG(s1394_send_response_exit,
-		    S1394_TNF_SL_ATRESP_STACK, "");
 		return (DDI_FAILURE);
 	}
 
-	TNF_PROBE_0_DEBUG(s1394_send_response_exit, S1394_TNF_SL_ATRESP_STACK,
-	    "");
 	return (DDI_SUCCESS);
 }
 
@@ -1261,9 +1085,6 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 	s1394_hal_state_t	state;
 	int			err;
 	int			ret;
-
-	TNF_PROBE_0_DEBUG(s1394_compare_swap_enter, S1394_TNF_SL_ATREQ_STACK,
-	    "");
 
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
 
@@ -1283,11 +1104,6 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 	if (ret != DDI_SUCCESS) {
 		/* Copy error code into result */
 		cmd->cmd_result = err;
-
-		TNF_PROBE_0(s1394_compare_swap_error_in_setup_asynch,
-		    S1394_TNF_SL_ATREQ_ERROR, "");
-		TNF_PROBE_0_DEBUG(s1394_compare_swap_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -1308,12 +1124,6 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 				s_priv->cmd_in_use = B_FALSE;
 
 				cmd->cmd_result = CMD1394_EINVALID_CONTEXT;
-
-				TNF_PROBE_1(s1394_compare_swap_error,
-				    S1394_TNF_SL_ATREQ_ERROR, "", tnf_string,
-				    msg, "CMD1394_BLOCKING in bus reset ctxt");
-				TNF_PROBE_0_DEBUG(s1394_compare_swap_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return (DDI_FAILURE);
 			}
 		}
@@ -1324,8 +1134,6 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 		/* Block (if necessary) */
 		s1394_block_on_asynch_cmd(cmd);
 
-		TNF_PROBE_0_DEBUG(t1394_write_exit, S1394_TNF_SL_ATREQ_STACK,
-		    "");
 		return (DDI_SUCCESS);
 	}
 	mutex_exit(&hal->topology_tree_mutex);
@@ -1342,8 +1150,6 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 			/* Block (if necessary) */
 			s1394_block_on_asynch_cmd(cmd);
 
-			TNF_PROBE_0_DEBUG(s1394_compare_swap_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_SUCCESS);
 
 		} else {
@@ -1355,18 +1161,11 @@ s1394_compare_swap(s1394_hal_t *hal, s1394_target_t *target, cmd1394_cmd_t *cmd)
 			/* Copy error code into result */
 			cmd->cmd_result = err;
 
-			TNF_PROBE_0(s1394_compare_swap_error_in_xfer,
-			    S1394_TNF_SL_ATREQ_ERROR, "");
-			TNF_PROBE_0_DEBUG(s1394_compare_swap_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		}
 	} else {
 		/* Block (if necessary) */
 		s1394_block_on_asynch_cmd(cmd);
-
-		TNF_PROBE_0_DEBUG(s1394_compare_swap_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_SUCCESS);
 	}
 }
@@ -1385,18 +1184,11 @@ s1394_split_lock_req(s1394_hal_t *hal, s1394_target_t *target,
 	s1394_cmd_priv_t *s_priv;
 	cmd1394_cmd_t	 *tmp_cmd;
 
-	TNF_PROBE_0_DEBUG(s1394_split_lock_req_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
-
 	/* Allocate a temporary command */
 	if (s1394_alloc_cmd(hal, T1394_ALLOC_CMD_NOSLEEP, &tmp_cmd) !=
 	    DDI_SUCCESS) {
 		cmd->cmd_result = CMD1394_EUNKNOWN_ERROR;
 
-		TNF_PROBE_0(s1394_split_lock_req_error_alloc_cmd,
-		    S1394_TNF_SL_ATREQ_ERROR, "");
-		TNF_PROBE_0_DEBUG(s1394_split_lock_req_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
@@ -1442,16 +1234,12 @@ s1394_split_lock_req(s1394_hal_t *hal, s1394_target_t *target,
 		if (s1394_free_cmd(hal, &tmp_cmd) != DDI_SUCCESS)
 			cmd->cmd_result = CMD1394_EUNKNOWN_ERROR;
 
-		TNF_PROBE_0_DEBUG(s1394_split_lock_req_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_FAILURE);
 	}
 
 	/* Block (if necessary) */
 	s1394_block_on_asynch_cmd(cmd);
 
-	TNF_PROBE_0_DEBUG(s1394_split_lock_req_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -1473,9 +1261,6 @@ s1394_handle_lock(cmd1394_cmd_t *cmd)
 	int		 tcmd_result;
 	int		 ret;
 
-
-	TNF_PROBE_0_DEBUG(s1394_handle_lock_enter, S1394_TNF_SL_ATREQ_STACK,
-	    "");
 
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(cmd);
@@ -1510,8 +1295,6 @@ lock_req_step_0:
 				tcmd_result = cmd->cmd_result;
 				goto lock_req_done;
 			} else {
-				TNF_PROBE_0_DEBUG(s1394_handle_lock_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return;
 			}
 		} else {
@@ -1540,10 +1323,7 @@ lock_req_step_0:
 	}
 
 lock_req_done:
-	if (s1394_free_cmd(to_hal, &cmd) != DDI_SUCCESS) {
-		TNF_PROBE_0(s1394_handle_lock_error_in_freecmd,
-		    S1394_TNF_SL_ATREQ_ERROR, "");
-	}
+	(void) s1394_free_cmd(to_hal, &cmd);
 
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(target_cmd);
@@ -1560,17 +1340,12 @@ lock_req_done:
 		cv_signal(&s_priv->blocking_cv);
 		mutex_exit(&s_priv->blocking_mutex);
 
-		TNF_PROBE_0_DEBUG(s1394_handle_lock_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return;
 	}
 
 	/* Call the target's completion_callback() */
 	if (target_cmd->completion_callback != NULL)
 		target_cmd->completion_callback(target_cmd);
-
-	TNF_PROBE_0_DEBUG(s1394_handle_lock_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 }
 
 /*
@@ -1586,9 +1361,6 @@ s1394_pending_q_insert(s1394_hal_t *hal, cmd1394_cmd_t *cmd, uint_t flags)
 	cmd1394_cmd_t *temp_cmd;
 	s1394_cmd_priv_t *s_priv;
 	s1394_cmd_priv_t *c_priv;
-
-	TNF_PROBE_0_DEBUG(s1394_pending_q_insert_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	mutex_enter(&hal->pending_q_mutex);
 
@@ -1630,9 +1402,6 @@ s1394_pending_q_insert(s1394_hal_t *hal, cmd1394_cmd_t *cmd, uint_t flags)
 
 	/* kstats - number of pending Q insertions */
 	hal->hal_kstats->pending_q_insert++;
-
-	TNF_PROBE_0_DEBUG(s1394_pending_q_insert_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 }
 
 /*
@@ -1648,16 +1417,11 @@ s1394_pending_q_remove(s1394_hal_t *hal)
 	cmd1394_cmd_t	 *cmd;
 	cmd1394_cmd_t	 *prev_cmd;
 
-	TNF_PROBE_0_DEBUG(s1394_pending_q_remove_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
-
 	mutex_enter(&hal->pending_q_mutex);
 
 	cmd = (cmd1394_cmd_t *)hal->pending_q_tail;
 	if (cmd == NULL) {
 		mutex_exit(&hal->pending_q_mutex);
-		TNF_PROBE_0_DEBUG(s1394_pending_q_remove_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (NULL);
 	}
 
@@ -1681,8 +1445,6 @@ s1394_pending_q_remove(s1394_hal_t *hal)
 
 	mutex_exit(&hal->pending_q_mutex);
 
-	TNF_PROBE_0_DEBUG(s1394_pending_q_remove_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 	return (cmd);
 }
 
@@ -1696,9 +1458,6 @@ s1394_resend_pending_cmds(s1394_hal_t *hal)
 {
 	int done;
 
-	TNF_PROBE_0_DEBUG(s1394_resend_pending_cmds_enter,
-	    S1394_TNF_SL_BR_STACK, "");
-
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
 
 	do {
@@ -1706,9 +1465,6 @@ s1394_resend_pending_cmds(s1394_hal_t *hal)
 	} while (done == B_FALSE);
 
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
-
-	TNF_PROBE_0_DEBUG(s1394_resend_pending_cmds_exit,
-	    S1394_TNF_SL_BR_STACK, "");
 }
 
 /*
@@ -1733,17 +1489,12 @@ s1394_process_pending_q(s1394_hal_t *hal)
 	uint_t		 current_max_payload;
 	int		 ret;
 
-	TNF_PROBE_0_DEBUG(s1394_process_pending_q_enter,
-	    S1394_TNF_SL_BR_STACK, "");
-
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
 
 	/* Pull a command from the Pending Q */
 	cmd = s1394_pending_q_remove(hal);
 
 	if (cmd == NULL) {
-		TNF_PROBE_0_DEBUG(s1394_process_pending_q_exit,
-		    S1394_TNF_SL_BR_STACK, "");
 		return (B_TRUE);
 	}
 
@@ -1772,8 +1523,6 @@ s1394_process_pending_q(s1394_hal_t *hal)
 				cv_signal(&s_priv->blocking_cv);
 				mutex_exit(&s_priv->blocking_mutex);
 
-				TNF_PROBE_0_DEBUG(s1394_process_pending_q_exit,
-				    S1394_TNF_SL_BR_STACK, "");
 				return (B_FALSE);
 			}
 
@@ -1782,8 +1531,6 @@ s1394_process_pending_q(s1394_hal_t *hal)
 				cmd->completion_callback(cmd);
 			}
 
-			TNF_PROBE_0_DEBUG(s1394_process_pending_q_exit,
-			    S1394_TNF_SL_BR_STACK, "");
 			return (B_FALSE);
 		}
 	} else {
@@ -1829,10 +1576,6 @@ s1394_process_pending_q(s1394_hal_t *hal)
 					cv_signal(&s_priv->blocking_cv);
 					mutex_exit(&s_priv->blocking_mutex);
 
-					TNF_PROBE_0_DEBUG(
-					    s1394_process_pending_q_exit,
-					    S1394_TNF_SL_BR_STACK,
-					    "");
 					return (B_FALSE);
 				}
 
@@ -1840,15 +1583,9 @@ s1394_process_pending_q(s1394_hal_t *hal)
 				if (cmd->completion_callback != NULL) {
 					s1394_unlock_tree(hal);
 					cmd->completion_callback(cmd);
-					TNF_PROBE_0_DEBUG(
-					    s1394_process_pending_q_exit,
-					    S1394_TNF_SL_BR_STACK, "");
 					return (B_FALSE);
 				} else {
 					s1394_unlock_tree(hal);
-					TNF_PROBE_0_DEBUG(
-					    s1394_process_pending_q_exit,
-					    S1394_TNF_SL_BR_STACK, "");
 					return (B_FALSE);
 				}
 			}
@@ -1914,8 +1651,6 @@ s1394_process_pending_q(s1394_hal_t *hal)
 			}
 			s1394_unlock_tree(hal);
 			ret = s1394_pending_q_helper(hal, cmd);
-			TNF_PROBE_0_DEBUG(s1394_process_pending_q_exit,
-			    S1394_TNF_SL_BR_STACK, "");
 			return (ret);
 		}
 	}
@@ -1933,9 +1668,6 @@ s1394_pending_q_helper(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 	int		 err;
 	int		 ret;
 
-	TNF_PROBE_0_DEBUG(s1394_pending_q_helper_enter,
-	    S1394_TNF_SL_BR_STACK, "");
-
 	ASSERT(MUTEX_NOT_HELD(&hal->topology_tree_mutex));
 
 	/* Get the Services Layer private area */
@@ -1952,9 +1684,6 @@ s1394_pending_q_helper(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 			/* Remove cmd outstanding req Q */
 			s1394_remove_q_asynch_cmd(hal, cmd);
 			s1394_pending_q_insert(hal, cmd, S1394_PENDING_Q_FRONT);
-
-			TNF_PROBE_0_DEBUG(s1394_pending_q_helper_exit,
-			    S1394_TNF_SL_BR_STACK, "");
 			return (B_TRUE);
 		} else {
 			/* Remove cmd from outstanding request Q */
@@ -1971,28 +1700,19 @@ s1394_pending_q_helper(s1394_hal_t *hal, cmd1394_cmd_t *cmd)
 				s_priv->blocking_flag = B_TRUE;
 				cv_signal(&s_priv->blocking_cv);
 				mutex_exit(&s_priv->blocking_mutex);
-
-				TNF_PROBE_0_DEBUG(s1394_pending_q_helper_exit,
-				    S1394_TNF_SL_BR_STACK, "");
 				return (B_FALSE);
 			}
 
 			/* Call target completion_callback() */
 			if (cmd->completion_callback != NULL) {
 				cmd->completion_callback(cmd);
-				TNF_PROBE_0_DEBUG(s1394_pending_q_helper_exit,
-				    S1394_TNF_SL_BR_STACK, "");
 				return (B_FALSE);
 			} else {
-				TNF_PROBE_0_DEBUG(s1394_pending_q_helper_exit,
-				    S1394_TNF_SL_BR_STACK, "");
 				return (B_FALSE);
 			}
 		}
 	}
 
-	TNF_PROBE_0_DEBUG(s1394_pending_q_helper_exit,
-	    S1394_TNF_SL_BR_STACK, "");
 	return (B_FALSE);
 }
 
@@ -2015,9 +1735,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 	uint32_t	 arg_value32;
 	uint32_t	 old_value32;
 	uint32_t	 temp_value32;
-
-	TNF_PROBE_0_DEBUG(s1394_process_split_lock_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	if (cmd->cmd_type == CMD1394_ASYNCH_LOCK_32) {
 		old_value32  = cmd->cmd_u.l32.old_value;
@@ -2078,9 +1795,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 				target_cmd->cmd_u.l32.old_value =
 				    T1394_DATA32(cmd->cmd_u.l32.old_value);
 				target_cmd->cmd_result = CMD1394_CMDSUCCESS;
-				TNF_PROBE_0_DEBUG(
-				    s1394_process_split_lock_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return (DDI_FAILURE);
 			}
 			break;
@@ -2097,9 +1811,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 				target_cmd->cmd_u.l32.old_value =
 				    T1394_DATA32(cmd->cmd_u.l32.old_value);
 				target_cmd->cmd_result = CMD1394_CMDSUCCESS;
-				TNF_PROBE_0_DEBUG(
-				    s1394_process_split_lock_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return (DDI_FAILURE);
 			}
 			break;
@@ -2189,9 +1900,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 				target_cmd->cmd_u.l64.old_value =
 				    T1394_DATA64(cmd->cmd_u.l64.old_value);
 				target_cmd->cmd_result = CMD1394_CMDSUCCESS;
-				TNF_PROBE_0_DEBUG(
-				    s1394_process_split_lock_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return (DDI_FAILURE);
 			}
 			break;
@@ -2208,9 +1916,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 				target_cmd->cmd_u.l64.old_value =
 				    T1394_DATA64(cmd->cmd_u.l64.old_value);
 				target_cmd->cmd_result = CMD1394_CMDSUCCESS;
-				TNF_PROBE_0_DEBUG(
-				    s1394_process_split_lock_exit,
-				    S1394_TNF_SL_ATREQ_STACK, "");
 				return (DDI_FAILURE);
 			}
 			break;
@@ -2243,8 +1948,6 @@ s1394_process_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 		cmd->cmd_u.l64.data_value = new_value64;
 	}
 
-	TNF_PROBE_0_DEBUG(s1394_process_split_lock_exit,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 	return (DDI_SUCCESS);
 }
 
@@ -2259,9 +1962,6 @@ s1394_finish_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 	s1394_cmd_priv_t *s_priv;
 	uint64_t	 tmp_value64;
 	uint32_t	 tmp_value32;
-
-	TNF_PROBE_0_DEBUG(s1394_finish_split_lock_enter,
-	    S1394_TNF_SL_ATREQ_STACK, "");
 
 	/* Get the Services Layer private area */
 	s_priv = S1394_GET_CMD_PRIV(cmd);
@@ -2312,8 +2012,6 @@ s1394_finish_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 		}
 		/* Set status */
 		target_cmd->cmd_result = CMD1394_CMDSUCCESS;
-		TNF_PROBE_0_DEBUG(s1394_finish_split_lock_exit,
-		    S1394_TNF_SL_ATREQ_STACK, "");
 		return (DDI_SUCCESS);
 	} else {
 		if (s_priv->temp_num_retries > 0) {
@@ -2323,17 +2021,10 @@ s1394_finish_split_lock(cmd1394_cmd_t *cmd, cmd1394_cmd_t *target_cmd)
 			/* Reset lock_req_step */
 			s_priv->lock_req_step = 0;
 
-			TNF_PROBE_0_DEBUG(s1394_finish_split_lock_start_over,
-			    S1394_TNF_SL_ATREQ_STACK, "");
-			/* Resend... start at step 0 again */
-			TNF_PROBE_0_DEBUG(s1394_finish_split_lock_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_FAILURE);
 		} else {
 			/* Failed... RETRIES_EXCEEDED */
 			target_cmd->cmd_result = CMD1394_ERETRIES_EXCEEDED;
-			TNF_PROBE_0_DEBUG(s1394_finish_split_lock_exit,
-			    S1394_TNF_SL_ATREQ_STACK, "");
 			return (DDI_SUCCESS);
 		}
 	}

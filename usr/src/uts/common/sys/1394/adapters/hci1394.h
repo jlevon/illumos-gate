@@ -23,6 +23,10 @@
  * Use is subject to license terms.
  */
 
+/*
+ * Copyright 2020 Joyent, Inc.
+ */
+
 #ifndef	_SYS_1394_ADAPTERS_HCI1394_H
 #define	_SYS_1394_ADAPTERS_HCI1394_H
 
@@ -46,7 +50,6 @@ extern "C" {
 #include <sys/1394/h1394.h>
 
 #include <sys/1394/adapters/hci1394_def.h>
-#include <sys/1394/adapters/hci1394_tnf.h>
 #include <sys/1394/adapters/hci1394_drvinfo.h>
 #include <sys/1394/adapters/hci1394_tlist.h>
 #include <sys/1394/adapters/hci1394_tlabel.h>

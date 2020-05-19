@@ -1,4 +1,4 @@
-/*
+/a*
  * CDDL HEADER START
  *
  * The contents of this file are subject to the terms of the
@@ -23,8 +23,6 @@
  * Copyright (c) 1999-2000 by Sun Microsystems, Inc.
  * All rights reserved.
  */
-
-#pragma	ident	"%Z%%M%	%I%	%E% SMI"
 
 /*
  * s1394.c
@@ -62,38 +60,17 @@ static struct modlinkage s1394_modlinkage = {
 static int s1394_init();
 static void s1394_fini();
 
-#ifndef NPROBE
-extern int tnf_mod_load(void);
-extern int tnf_mod_unload(struct modlinkage *mlp);
-#endif
-
 int
 _init()
 {
 	int status;
 
-#ifndef	NPROBE
-	(void) tnf_mod_load();
-#endif
 	status = s1394_init();
 	if (status != 0) {
-		TNF_PROBE_1(_init_error, S1394_TNF_SL_ERROR, "",
-		    tnf_string, msg, "s1394: failed in s1394_init");
-#ifndef NPROBE
-		(void) tnf_mod_unload(&s1394_modlinkage);
-#endif
 		return (status);
 	}
 
-	status = mod_install(&s1394_modlinkage);
-	if (status != 0) {
-		TNF_PROBE_1(_init_error, S1394_TNF_SL_ERROR, "",
-		    tnf_string, msg, "s1394: failed in mod_install");
-#ifndef NPROBE
-		(void) tnf_mod_unload(&s1394_modlinkage);
-#endif
-	}
-	return (status);
+	return (mod_install(&s1394_modlinkage));
 }
 
 int
@@ -109,15 +86,10 @@ _fini()
 
 	status = mod_remove(&s1394_modlinkage);
 	if (status != 0) {
-		TNF_PROBE_1(_fini_error, S1394_TNF_SL_ERROR, "",
-		    tnf_string, msg, "s1394: failed in mod_remove");
 		return (status);
 	}
 
 	s1394_fini();
-#ifndef NPROBE
-	(void) tnf_mod_unload(&s1394_modlinkage);
-#endif
 	return (status);
 }
 
@@ -129,15 +101,12 @@ _fini()
 static int
 s1394_init()
 {
-	TNF_PROBE_0_DEBUG(s1394_init_enter, S1394_TNF_SL_STACK, "");
-
 	s1394_statep = kmem_zalloc(sizeof (s1394_state_t), KM_SLEEP);
 
 	s1394_statep->hal_head = NULL;
 	s1394_statep->hal_tail = NULL;
 	mutex_init(&s1394_statep->hal_list_mutex, NULL, MUTEX_DRIVER, NULL);
 
-	TNF_PROBE_0_DEBUG(s1394_init_exit, S1394_TNF_SL_STACK, "");
 	return (0);
 }
 
@@ -149,11 +118,7 @@ s1394_init()
 static void
 s1394_fini()
 {
-	TNF_PROBE_0_DEBUG(s1394_fini_enter, S1394_TNF_SL_STACK, "");
-
 	mutex_destroy(&s1394_statep->hal_list_mutex);
 
 	kmem_free(s1394_statep, sizeof (s1394_state_t));
-
-	TNF_PROBE_0_DEBUG(s1394_fini_exit, S1394_TNF_SL_STACK, "");
 }
